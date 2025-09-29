@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 
 class BusinessInformationController extends Controller
 {
+    //TEST
     public function __construct()
     {
         // Protect all endpoints with authentication
