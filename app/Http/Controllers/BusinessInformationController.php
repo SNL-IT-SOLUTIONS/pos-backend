@@ -44,14 +44,14 @@ class BusinessInformationController extends Controller
         $info = BusinessInformation::updateOrCreate(
             ['id' => 1],
             array_merge($validated, [
-                'updated_by' => Auth::id() // ✅ actually save in DB
-            ]) // force only one record
+                'updated_by' => Auth::id()
+            ])
         );
 
         return response()->json([
             'isSuccess' => true,
             'data' => $info,
-            'updated_by' => Auth::user()->id, // shows who updated it
+            'updated_by' => Auth::user()->id,
         ]);
     }
 }
