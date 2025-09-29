@@ -1,0 +1,113 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\GiftCards;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class GiftCardsController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum');
+    }
+
+    // Create new GiftCard
+    public function createGiftCard(Request $request)
+    {
+        $validated = $request->validate([
+            'gift_card_name' => 'required|string|max:150|unique:gift_cards,gift_card_name',
+            'description'    => 'nullable|string|max:255',
+            'value'          => 'required|numeric|min:0',
+            'customer_id'    => 'required|integer|exists:customers,id',
+            'is_active'      => 'required|boolean',
+        ]);
+
+        $giftCard = GiftCards::create($validated);
+
+        return response()->json([
+            'isSuccess' => true,
+            'message'   => 'Gift card created successfully.',
+            'gift_card' => $giftCard,
+        ], 201);
+    }
+
+    // Get all GiftCards
+    public function getGiftCards()
+    {
+        $giftCards = GiftCards::with('customer')->get();
+
+        return response()->json([
+            'isSuccess'  => true,
+            'gift_cards' => $giftCards,
+        ], 200);
+    }
+
+    // Get single GiftCard by ID
+    public function getGiftCardById($id)
+    {
+        $giftCard = GiftCards::with('customer')->find($id);
+
+        if (!$giftCard) {
+            return response()->json([
+                'isSuccess' => false,
+                'message'   => 'Gift card not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'isSuccess' => true,
+            'gift_card' => $giftCard,
+        ], 200);
+    }
+
+    // Update GiftCard
+    public function updateGiftCard(Request $request, $id)
+    {
+        $giftCard = GiftCards::find($id);
+
+        if (!$giftCard) {
+            return response()->json([
+                'isSuccess' => false,
+                'message'   => 'Gift card not found.',
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'gift_card_name' => 'required|string|max:150|unique:gift_cards,gift_card_name,' . $id,
+            'description'    => 'nullable|string|max:255',
+            'value'          => 'required|numeric|min:0',
+            'customer_id'    => 'required|integer|exists:customers,id',
+            'is_active'      => 'required|boolean',
+        ]);
+
+        $giftCard->update($validated);
+
+        return response()->json([
+            'isSuccess' => true,
+            'message'   => 'Gift card updated successfully.',
+            'gift_card' => $giftCard,
+        ], 200);
+    }
+
+    // Delete GiftCard
+    public function archiveGiftCard($id)
+    {
+        $giftCard = GiftCards::where('id', $id)->where('is_archived', 0)->first();
+
+        if (!$giftCard) {
+            return response()->json([
+                'isSuccess' => false,
+                'message'   => 'Gift card not found or already archived.',
+            ], 404);
+        }
+
+        $giftCard->update(['is_archived' => 1]);
+
+        return response()->json([
+            'isSuccess' => true,
+            'message'   => 'Gift card archived successfully.',
+        ], 200);
+    }
+}
