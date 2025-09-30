@@ -12,6 +12,7 @@ use App\Http\Controllers\TagsController;
 use App\Http\Controllers\CardController;
 use App\Http\Controllers\GiftCardsController;
 use App\Http\Controllers\CustomersController;
+use App\Http\Controllers\DropdownController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ReceivingController;
@@ -144,4 +145,17 @@ Route::controller(SalesController::class)->middleware(['auth:sanctum'])->group(f
 Route::controller(BusinessInformationController::class)->middleware(['auth:sanctum'])->group(function () {
     Route::get('get-business-information', 'getBusinessInformation');
     Route::post('save-business-information', 'saveBusinessInformation');
+});
+
+
+//DROPDOWN
+Route::prefix('dropdown')->controller(DropdownController::class)->group(function () {
+    Route::get('users', 'getUsersForDropdown');
+    Route::get('categories', 'getCategoriesForDropdown');
+    Route::get('tags', 'getTagsForDropdown');
+    Route::get('cards', 'getCardsForDropdown');
+    Route::get('gift-cards', 'getGiftCardsForDropdown');
+    Route::get('suppliers', 'getSuppliersForDropdown');
+    Route::get('items', 'getItemsForDropdown');
+    Route::get('customers', 'getCustomersForDropdown');
 });
