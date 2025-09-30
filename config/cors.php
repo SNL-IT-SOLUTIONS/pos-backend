@@ -12,7 +12,7 @@ return [
     'paths' => [
         'api/*',
         'sanctum/csrf-cookie',
-        'public/img/*',
+        'public/*',
     ],
 
     'allowed_methods' => ['*'],
