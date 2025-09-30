@@ -8,13 +8,14 @@ use App\Http\Controllers\UsersController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\GiftCardController;
 use App\Http\Controllers\TagsController;
+use App\Http\Controllers\CardController;
 use App\Http\Controllers\GiftCardsController;
 use App\Http\Controllers\CustomersController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ReceivingController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -82,6 +83,16 @@ Route::controller(TagsController::class)->middleware(['auth:sanctum'])->group(fu
     Route::post('update/tags/{id}', 'updateTag');
     Route::post('tags/{id}/archive', 'archiveTag');
 });
+
+//CARDS
+Route::controller(CardController::class)->middleware(['auth:sanctum'])->group(function () {
+    Route::get('cards', 'getCards');
+    Route::get('cards/{id}', 'getCardById');
+    Route::post('create/cards', 'createCard');
+    Route::post('update/cards/{id}', 'updateCard');
+    Route::post('cards/{id}/archive', 'archiveCard');
+});
+
 
 
 //GIFT CARDS

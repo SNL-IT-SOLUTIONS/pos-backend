@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\GiftCards;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class GiftCardsController extends Controller
 {
@@ -17,12 +17,19 @@ class GiftCardsController extends Controller
     public function createGiftCard(Request $request)
     {
         $validated = $request->validate([
-            'gift_card_name' => 'required|string|max:150|unique:gift_cards,gift_card_name',
-            'description'    => 'nullable|string|max:255',
-            'value'          => 'required|numeric|min:0',
-            'customer_id'    => 'required|integer|exists:customers,id',
-            'is_active'      => 'required|boolean',
+            'card_id'          => 'required|integer|exists:cards,id',
+            'gift_card_name'   => 'required|string|max:150|unique:gift_cards,gift_card_name',
+            'description'      => 'nullable|string|max:255',
+            'value'            => 'required|numeric|min:0',
+            'balance'          => 'nullable|numeric|min:0',
+            'expiration_date'  => 'nullable|date|after:today',
+            'customer_id'      => 'required|integer|exists:customers,id',
+            'is_active'        => 'required|boolean',
         ]);
+
+        // Generate gift card number format: GC{card_id}-{year}
+        $year = date('Y');
+        $validated['gift_card_number'] = sprintf("GC%03d-%s", $validated['card_id'], $year);
 
         $giftCard = GiftCards::create($validated);
 
@@ -33,10 +40,11 @@ class GiftCardsController extends Controller
         ], 201);
     }
 
+
     // Get all GiftCards
     public function getGiftCards()
     {
-        $giftCards = GiftCards::with('customer')->get();
+        $giftCards = GiftCards::with(['customer', 'card'])->get();
 
         return response()->json([
             'isSuccess'  => true,
@@ -47,7 +55,7 @@ class GiftCardsController extends Controller
     // Get single GiftCard by ID
     public function getGiftCardById($id)
     {
-        $giftCard = GiftCards::with('customer')->find($id);
+        $giftCard = GiftCards::with(['customer', 'card'])->find($id);
 
         if (!$giftCard) {
             return response()->json([
@@ -75,11 +83,14 @@ class GiftCardsController extends Controller
         }
 
         $validated = $request->validate([
-            'gift_card_name' => 'required|string|max:150|unique:gift_cards,gift_card_name,' . $id,
-            'description'    => 'nullable|string|max:255',
-            'value'          => 'required|numeric|min:0',
-            'customer_id'    => 'required|integer|exists:customers,id',
-            'is_active'      => 'required|boolean',
+            'card_id'          => 'required|integer|exists:cards,id',
+            'gift_card_name'   => 'required|string|max:150|unique:gift_cards,gift_card_name,' . $id,
+            'description'      => 'nullable|string|max:255',
+            'value'            => 'required|numeric|min:0',
+            'balance'          => 'nullable|numeric|min:0',
+            'expiration_date'  => 'nullable|date|after:today',
+            'customer_id'      => 'required|integer|exists:customers,id',
+            'is_active'        => 'required|boolean',
         ]);
 
         $giftCard->update($validated);
@@ -91,7 +102,7 @@ class GiftCardsController extends Controller
         ], 200);
     }
 
-    // Delete GiftCard
+    // Archive GiftCard (soft delete style)
     public function archiveGiftCard($id)
     {
         $giftCard = GiftCards::where('id', $id)->where('is_archived', 0)->first();
