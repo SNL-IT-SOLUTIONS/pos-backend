@@ -12,6 +12,9 @@ use App\Http\Controllers\GiftCardController;
 use App\Http\Controllers\TagsController;
 use App\Http\Controllers\GiftCardsController;
 use App\Http\Controllers\CustomersController;
+use App\Http\Controllers\ItemController;
+use App\Http\Controllers\SupplierController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -60,17 +63,6 @@ Route::controller(CustomersController::class)->middleware(['auth:sanctum'])->gro
 });
 
 
-
-
-
-
-
-
-
-
-
-
-
 //CATEGORIES
 Route::controller(CategoryController::class)->middleware(['auth:sanctum'])->group(function () {
     Route::get('categories', 'getCategories');
@@ -79,6 +71,7 @@ Route::controller(CategoryController::class)->middleware(['auth:sanctum'])->grou
     Route::post('update/categories/{id}', 'updateCategory');
     Route::post('categories/{id}/archive', 'archiveCategory');
 });
+
 
 //TAGS
 Route::controller(TagsController::class)->middleware(['auth:sanctum'])->group(function () {
@@ -99,7 +92,23 @@ Route::controller(GiftCardsController::class)->middleware(['auth:sanctum'])->gro
     Route::post('gift-cards/{id}/archive', 'archiveGiftCard');
 });
 
+//SUPPLIERS
+Route::controller(SupplierController::class)->middleware(['auth:sanctum'])->group(function () {
+    Route::get('suppliers', 'getAllSuppliers');
+    Route::get('suppliers/{id}', 'getSupplierById');
+    Route::post('create/suppliers', 'createSupplier');
+    Route::post('update/suppliers/{id}', 'updateSupplier');
+    Route::post('suppliers/{id}/archive', 'archiveSupplier');
+});
 
+//ITEMS
+Route::controller(ItemController::class)->middleware(['auth:sanctum'])->group(function () {
+    Route::get('items', 'getAllItems');
+    Route::get('items/{id}', 'getItemById');
+    Route::post('create/items', 'createItem');
+    Route::post('update/items/{id}', 'updateItem');
+    Route::post('items/{id}/archive', 'archiveItem');
+});
 
 
 
@@ -109,12 +118,3 @@ Route::controller(BusinessInformationController::class)->middleware(['auth:sanct
     Route::get('get-business-information', 'getBusinessInformation');
     Route::post('save-business-information', 'saveBusinessInformation');
 });
-
-
-
- 
-
-//example - having a middleware
-// Route::controller(BaseController::class)->middleware(['auth:sanctum'])->group(function () {
-//     Route::get('get', 'getAll')->middleware('teacher');
-// });
