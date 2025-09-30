@@ -42,7 +42,7 @@ class BusinessInformationController extends Controller
 
         // Create or update the first record only
         $info = BusinessInformation::updateOrCreate(
-            ['id' => 1],
+            ['id' => 2],
             array_merge($validated, [
                 'updated_by' => Auth::id()
             ])
