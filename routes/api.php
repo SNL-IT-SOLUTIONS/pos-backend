@@ -14,6 +14,7 @@ use App\Http\Controllers\GiftCardsController;
 use App\Http\Controllers\CustomersController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\ReceivingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -108,6 +109,14 @@ Route::controller(ItemController::class)->middleware(['auth:sanctum'])->group(fu
     Route::post('create/items', 'createItem');
     Route::post('update/items/{id}', 'updateItem');
     Route::post('items/{id}/archive', 'archiveItem');
+});
+
+//RECEIVINGS
+Route::controller(ReceivingController::class)->middleware(['auth:sanctum'])->group(function () {
+    Route::get('receivings', 'getAllReceivings');
+    Route::get('receivings/{id}', 'getReceivingById');
+    Route::post('create/receivings', 'createReceiving');
+    Route::post('complete/receivings/{id}', 'completeReceiving');
 });
 
 
