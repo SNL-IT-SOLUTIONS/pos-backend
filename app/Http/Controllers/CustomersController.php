@@ -18,16 +18,17 @@ class CustomersController extends Controller
     {
         try {
             $validated = $request->validate([
-                'first_name' => 'required|string|max:150',
-                'last_name'  => 'required|string|max:150',
-                'email'      => 'required|email|unique:customers,email',
-                'phone'      => 'nullable|string|max:50',
-                'address'    => 'nullable|string|max:255',
-                'city'       => 'nullable|string|max:100',
-                'state'      => 'nullable|string|max:100',
-                'zip'        => 'nullable|string|max:20',
-                'country'    => 'nullable|string|max:100',
-                'comments'   => 'nullable|string',
+                'first_name'       => 'required|string|max:150',
+                'last_name'        => 'required|string|max:150',
+                'profile_picture'      => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // file upload
+                'email'            => 'required|email|unique:customers,email',
+                'phone'            => 'nullable|string|max:50',
+                'address'          => 'nullable|string|max:255',
+                'city'             => 'nullable|string|max:100',
+                'state'            => 'nullable|string|max:100',
+                'zip'              => 'nullable|string|max:20',
+                'country'          => 'nullable|string|max:100',
+                'comments'         => 'nullable|string',
             ]);
 
             $validated['is_archived'] = 0;
@@ -36,6 +37,11 @@ class CustomersController extends Controller
             $lastCustomer = Customers::orderBy('id', 'desc')->first();
             $nextId = $lastCustomer ? $lastCustomer->id + 1 : 1;
             $validated['customer_number'] = 'CUST-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
+
+            // Handle profile picture upload using helper
+            if ($request->hasFile('profile_picture')) {
+                $validated['profile_picture'] = $this->saveFileToPublic($request, 'profile_picture', 'customer');
+            }
 
             $customer = Customers::create($validated);
 
@@ -52,6 +58,7 @@ class CustomersController extends Controller
             ], 500);
         }
     }
+
 
     // ✅ Get all customers (exclude archived)
     public function getCustomers()
@@ -96,17 +103,30 @@ class CustomersController extends Controller
 
         try {
             $validated = $request->validate([
-                'first_name' => 'sometimes|string|max:150',
-                'last_name'  => 'sometimes|string|max:150',
-                'email'      => 'sometimes|email|unique:customers,email,' . $id,
-                'phone'      => 'nullable|string|max:50',
-                'address'    => 'nullable|string|max:255',
-                'city'       => 'nullable|string|max:100',
-                'state'      => 'nullable|string|max:100',
-                'zip'        => 'nullable|string|max:20',
-                'country'    => 'nullable|string|max:100',
-                'comments'   => 'nullable|string',
+                'first_name'     => 'sometimes|string|max:150',
+                'last_name'      => 'sometimes|string|max:150',
+                'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+                'email'          => 'sometimes|email|unique:customers,email,' . $id,
+                'phone'          => 'nullable|string|max:50',
+                'address'        => 'nullable|string|max:255',
+                'city'           => 'nullable|string|max:100',
+                'state'          => 'nullable|string|max:100',
+                'zip'            => 'nullable|string|max:20',
+                'country'        => 'nullable|string|max:100',
+                'comments'       => 'nullable|string',
             ]);
+
+            // Handle profile picture upload
+            if ($request->hasFile('profile_picture')) {
+                $path = $this->saveFileToPublic($request, 'profile_picture', 'customer');
+
+                // optionally delete old file if exists
+                if ($customer->profile_picture && file_exists(public_path($customer->profile_picture))) {
+                    unlink(public_path($customer->profile_picture));
+                }
+
+                $validated['profile_picture'] = $path;
+            }
 
             $customer->update($validated);
 
@@ -123,6 +143,7 @@ class CustomersController extends Controller
             ], 500);
         }
     }
+
 
     // ✅ Soft delete customer (set is_archived = 1)
     public function archiveCustomer($id)
@@ -142,5 +163,31 @@ class CustomersController extends Controller
             'isSuccess' => true,
             'message'   => 'Customer archived successfully.'
         ], 200);
+    }
+
+
+    //HELPERS
+    private function saveFileToPublic(Request $request, $field, $prefix)
+    {
+        if ($request->hasFile($field)) {
+            $file = $request->file($field);
+
+            // Directory inside /public
+            $directory = public_path('pos_files');
+            if (!file_exists($directory)) {
+                mkdir($directory, 0755, true);
+            }
+
+            // Generate filename: prefix + unique id + original extension
+            $filename = $prefix . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+            // Move file to public/admission_files
+            $file->move($directory, $filename);
+
+            // Return relative path (to store in DB)
+            return 'pos_files/' . $filename;
+        }
+
+        return null;
     }
 }

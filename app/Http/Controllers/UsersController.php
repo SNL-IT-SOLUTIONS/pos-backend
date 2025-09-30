@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
 
 class UsersController extends Controller
 {
@@ -48,6 +50,7 @@ class UsersController extends Controller
             $validated = $request->validate([
                 'first_name' => 'required|string|max:150',
                 'last_name'  => 'required|string|max:150',
+                'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // only images
                 'email'      => 'required|email|unique:users,email',
                 'username'   => 'required|string|unique:users,username',
                 'role_id'    => 'required|integer|exists:roles,id',
@@ -69,6 +72,13 @@ class UsersController extends Controller
             $lastNumber = $lastUser ? intval(substr($lastUser->employee_number, 3)) : 0;
             $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
             $validated['employee_number'] = 'EMP' . $newNumber;
+
+            // Handle profile picture upload
+            if ($request->hasFile('profile_picture')) {
+                $path = $this->saveFileToPublic($request, 'profile_picture', 'profile');
+                $validated['profile_picture'] = $path;
+            }
+
 
             $user = User::create($validated);
 
@@ -102,6 +112,7 @@ class UsersController extends Controller
             $validated = $request->validate([
                 'first_name' => 'sometimes|string|max:150',
                 'last_name'  => 'sometimes|string|max:150',
+                'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
                 'email'      => 'sometimes|email|unique:users,email,' . $id,
                 'username'   => 'sometimes|string|unique:users,username,' . $id,
                 'role_id'    => 'sometimes|integer|exists:roles,id',
@@ -119,6 +130,17 @@ class UsersController extends Controller
                 $validated['password'] = Hash::make($validated['password']);
             } else {
                 unset($validated['password']);
+            }
+
+            // Handle profile picture upload
+            if ($request->hasFile('profile_picture')) {
+                // delete old file if it exists
+                if ($user->profile_picture && file_exists(public_path($user->profile_picture))) {
+                    unlink(public_path($user->profile_picture));
+                }
+
+                $path = $this->saveFileToPublic($request, 'profile_picture', 'profile');
+                $validated['profile_picture'] = $path;
             }
 
             $user->update($validated);
@@ -154,5 +176,31 @@ class UsersController extends Controller
             'isSuccess' => true,
             'message'   => 'User archived successfully.'
         ]);
+    }
+
+
+    //HELPERS
+    private function saveFileToPublic(Request $request, $field, $prefix)
+    {
+        if ($request->hasFile($field)) {
+            $file = $request->file($field);
+
+            // Directory inside /public
+            $directory = public_path('pos_files');
+            if (!file_exists($directory)) {
+                mkdir($directory, 0755, true);
+            }
+
+            // Generate filename: prefix + unique id + original extension
+            $filename = $prefix . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+            // Move file to public/admission_files
+            $file->move($directory, $filename);
+
+            // Return relative path (to store in DB)
+            return 'pos_files/' . $filename;
+        }
+
+        return null;
     }
 }
