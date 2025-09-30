@@ -15,6 +15,7 @@ use App\Http\Controllers\CustomersController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ReceivingController;
+use App\Http\Controllers\SalesController;
 
 
 /*
@@ -130,6 +131,12 @@ Route::controller(ReceivingController::class)->middleware(['auth:sanctum'])->gro
     Route::post('complete/receivings/{id}', 'completeReceiving');
 });
 
+//SALES
+Route::controller(SalesController::class)->middleware(['auth:sanctum'])->group(function () {
+    Route::get('sales', 'getAllSales');
+    Route::get('sales/{id}', 'getSaleById');
+    Route::post('create/sales', 'createSale');
+});
 
 
 
