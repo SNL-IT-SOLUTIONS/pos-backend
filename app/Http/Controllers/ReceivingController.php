@@ -13,24 +13,32 @@ class ReceivingController extends Controller
     // Get all receivings with supplier + items
     public function getAllReceivings(Request $request)
     {
+        $perPage = $request->input('per_page', 10);
+
         $query = Receiving::with(['supplier', 'items.item']);
 
         // 🔎 Optional filters
         if ($request->has('supplier_id')) {
             $query->where('supplier_id', $request->supplier_id);
         }
-
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
 
-        $receivings = $query->get();
+        $receivings = $query->paginate($perPage);
 
         return response()->json([
-            'isSuccess' => true,
-            'receivings' => $receivings
+            'isSuccess'  => true,
+            'receivings' => $receivings->items(),
+            'pagination' => [
+                'current_page' => $receivings->currentPage(),
+                'per_page'     => $receivings->perPage(),
+                'total'        => $receivings->total(),
+                'last_page'    => $receivings->lastPage(),
+            ],
         ]);
     }
+
 
     //  Get single receiving with items
     public function getReceivingById($id)

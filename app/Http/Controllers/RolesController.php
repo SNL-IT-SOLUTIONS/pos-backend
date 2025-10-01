@@ -42,10 +42,12 @@ class RolesController extends Controller
     }
 
     // ✅ Get all roles (exclude archived)
-    public function getRoles()
+    public function getRoles(Request $request)
     {
         try {
-            $roles = Roles::where('is_archived', 0)->get();
+            $perPage = $request->input('per_page', 10);
+
+            $roles = Roles::where('is_archived', 0)->paginate($perPage);
 
             if ($roles->isEmpty()) {
                 return response()->json([
@@ -55,9 +57,15 @@ class RolesController extends Controller
             }
 
             return response()->json([
-                'isSuccess' => true,
-                'roles'     => $roles
-            ], 200);
+                'isSuccess'  => true,
+                'roles'      => $roles->items(),
+                'pagination' => [
+                    'current_page' => $roles->currentPage(),
+                    'per_page'     => $roles->perPage(),
+                    'total'        => $roles->total(),
+                    'last_page'    => $roles->lastPage(),
+                ],
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'isSuccess' => false,
@@ -66,6 +74,7 @@ class RolesController extends Controller
             ], 500);
         }
     }
+
 
     // ✅ Get single role
     public function getRoleById($id)

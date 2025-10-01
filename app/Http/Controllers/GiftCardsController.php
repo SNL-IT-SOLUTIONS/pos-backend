@@ -42,15 +42,24 @@ class GiftCardsController extends Controller
 
 
     // Get all GiftCards
-    public function getGiftCards()
+    public function getGiftCards(Request $request)
     {
-        $giftCards = GiftCards::with(['customer', 'card'])->get();
+        $perPage = $request->input('per_page', 10);
+
+        $giftCards = GiftCards::with(['customer', 'card'])->paginate($perPage);
 
         return response()->json([
             'isSuccess'  => true,
-            'gift_cards' => $giftCards,
-        ], 200);
+            'gift_cards' => $giftCards->items(),
+            'pagination' => [
+                'current_page' => $giftCards->currentPage(),
+                'per_page'     => $giftCards->perPage(),
+                'total'        => $giftCards->total(),
+                'last_page'    => $giftCards->lastPage(),
+            ],
+        ]);
     }
+
 
     // Get single GiftCard by ID
     public function getGiftCardById($id)

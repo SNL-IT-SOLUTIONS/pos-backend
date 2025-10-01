@@ -7,9 +7,11 @@ use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
-    public function getAllSuppliers()
+    public function getAllSuppliers(Request $request)
     {
-        $suppliers = Supplier::where('is_active', 1)->get();
+        $perPage = $request->input('per_page', 10);
+
+        $suppliers = Supplier::where('is_active', 1)->paginate($perPage);
 
         if ($suppliers->isEmpty()) {
             return response()->json([
@@ -19,10 +21,17 @@ class SupplierController extends Controller
         }
 
         return response()->json([
-            'isSuccess' => true,
-            'suppliers' => $suppliers
+            'isSuccess'  => true,
+            'suppliers'  => $suppliers->items(),
+            'pagination' => [
+                'current_page' => $suppliers->currentPage(),
+                'per_page'     => $suppliers->perPage(),
+                'total'        => $suppliers->total(),
+                'last_page'    => $suppliers->lastPage(),
+            ],
         ]);
     }
+
 
     public function getSupplierById($id)
     {

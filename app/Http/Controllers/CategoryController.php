@@ -15,12 +15,14 @@ class CategoryController extends Controller
     }
 
     // ✅ Get all categories (exclude archived)
-    public function getCategories()
+    public function getCategories(Request $request)
     {
         try {
+            $perPage = $request->input('per_page', 10);
+
             $categories = Category::where('is_archived', 0)
                 ->orderBy('category_name')
-                ->get();
+                ->paginate($perPage);
 
             if ($categories->isEmpty()) {
                 return response()->json([
@@ -31,8 +33,14 @@ class CategoryController extends Controller
 
             return response()->json([
                 'isSuccess'  => true,
-                'categories' => $categories,
-            ], 200);
+                'categories' => $categories->items(),
+                'pagination' => [
+                    'current_page' => $categories->currentPage(),
+                    'per_page'     => $categories->perPage(),
+                    'total'        => $categories->total(),
+                    'last_page'    => $categories->lastPage(),
+                ],
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'isSuccess' => false,
@@ -41,6 +49,7 @@ class CategoryController extends Controller
             ], 500);
         }
     }
+
 
     // ✅ Get single category
     public function getCategoryById($id)

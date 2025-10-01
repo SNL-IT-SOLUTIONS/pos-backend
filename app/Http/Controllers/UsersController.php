@@ -32,12 +32,18 @@ class UsersController extends Controller
             return $user;
         });
 
-
         return response()->json([
-            'isSuccess' => true,
-            'users'     => $users
+            'isSuccess'  => true,
+            'users'      => $users->items(),
+            'pagination' => [
+                'current_page' => $users->currentPage(),
+                'per_page'     => $users->perPage(),
+                'total'        => $users->total(),
+                'last_page'    => $users->lastPage(),
+            ],
         ]);
     }
+
 
 
     public function getUserById($id)

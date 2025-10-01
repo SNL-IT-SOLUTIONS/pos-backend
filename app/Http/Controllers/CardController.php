@@ -32,15 +32,24 @@ class CardController extends Controller
     }
 
     // Get all Cards
-    public function getCards()
+    public function getCards(Request $request)
     {
-        $cards = Card::all();
+        $perPage = $request->input('per_page', 10);
+
+        $cards = Card::paginate($perPage);
 
         return response()->json([
             'isSuccess' => true,
-            'cards'     => $cards,
-        ], 200);
+            'cards'     => $cards->items(),
+            'pagination' => [
+                'current_page' => $cards->currentPage(),
+                'per_page'     => $cards->perPage(),
+                'total'        => $cards->total(),
+                'last_page'    => $cards->lastPage(),
+            ],
+        ]);
     }
+
 
     // Get single Card by ID
     public function getCardById($id)

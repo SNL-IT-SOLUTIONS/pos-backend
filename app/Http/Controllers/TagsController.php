@@ -15,12 +15,14 @@ class TagsController extends Controller
     }
 
     // ✅ Get all tags (exclude archived)
-    public function getTags()
+    public function getTags(Request $request)
     {
         try {
+            $perPage = $request->input('per_page', 10);
+
             $tags = Tags::where('is_archived', 0)
                 ->orderBy('tag_name')
-                ->get();
+                ->paginate($perPage);
 
             if ($tags->isEmpty()) {
                 return response()->json([
@@ -30,8 +32,14 @@ class TagsController extends Controller
             }
 
             return response()->json([
-                'isSuccess' => true,
-                'tags'      => $tags,
+                'isSuccess'  => true,
+                'tags'       => $tags->items(),
+                'pagination' => [
+                    'current_page' => $tags->currentPage(),
+                    'per_page'     => $tags->perPage(),
+                    'total'        => $tags->total(),
+                    'last_page'    => $tags->lastPage(),
+                ],
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -41,6 +49,7 @@ class TagsController extends Controller
             ], 500);
         }
     }
+
 
     // ✅ Get single tag by ID
     public function getTagById($id)

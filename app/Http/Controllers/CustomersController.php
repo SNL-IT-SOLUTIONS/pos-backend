@@ -77,16 +77,17 @@ class CustomersController extends Controller
         });
 
         return response()->json([
-            'isSuccess' => true,
-            'customers' => $customers,
+            'isSuccess'  => true,
+            'customers'  => $customers->items(),
             'pagination' => [
                 'current_page' => $customers->currentPage(),
-                'per_page' => $customers->perPage(),
-                'total' => $customers->total(),
-                'last_page' => $customers->lastPage(),
+                'per_page'     => $customers->perPage(),
+                'total'        => $customers->total(),
+                'last_page'    => $customers->lastPage(),
             ],
         ], 200);
     }
+
 
 
 
