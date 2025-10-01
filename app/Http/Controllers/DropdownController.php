@@ -10,6 +10,8 @@ use App\Models\Roles;
 use App\Models\Sales;
 use App\Models\Category;
 use App\Models\Card;
+use App\Models\Supplier;
+use App\Models\User;
 
 class DropdownController extends Controller
 {
@@ -102,6 +104,31 @@ class DropdownController extends Controller
         return response()->json([
             'isSuccess' => true,
             'sales' => $sales
+        ]);
+    }
+
+    public function getSuppliers()
+    {
+        $suppliers = Supplier::select('id', 'supplier_name', 'contact_name', 'phone')
+            ->where('is_active', 1)
+            ->get();
+
+        return response()->json([
+            'isSuccess' => true,
+            'suppliers' => $suppliers
+        ]);
+    }
+
+    public function getUsers()
+    {
+
+        $users = User::select('id', 'first_name', 'last_name', 'email')
+            ->where('is_active', 1)
+            ->get();
+
+        return response()->json([
+            'isSuccess' => true,
+            'users' => $users
         ]);
     }
 }

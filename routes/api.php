@@ -150,13 +150,13 @@ Route::controller(BusinessInformationController::class)->middleware(['auth:sanct
 
 //DROPDOWN
 Route::prefix('dropdown')->controller(DropdownController::class)->group(function () {
-    Route::get('users', 'getUsersForDropdown');
-    Route::get('categories', 'getCategoriesForDropdown');
-    Route::get('tags', 'getTagsForDropdown');
-    Route::get('cards', 'getCardsForDropdown');
-    Route::get('gift-cards', 'getGiftCardsForDropdown');
-    Route::get('suppliers', 'getSuppliersForDropdown');
-    Route::get('items', 'getItemsForDropdown');
-    Route::get('customers', 'getCustomersForDropdown');
+    Route::get('users', 'getUsers');
+    Route::get('categories', 'getCategories');
+    Route::get('tags', 'getTags');
+    Route::get('cards', 'getCards');
+    Route::get('gift-cards', 'getGiftCards');
+    Route::get('suppliers', 'getSuppliers');
+    Route::get('items', 'getItems');
+    Route::get('customers', 'getCustomers');
     Route::get('roles', 'getRoles');
 });
