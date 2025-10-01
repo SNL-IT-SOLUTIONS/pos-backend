@@ -61,15 +61,34 @@ class CustomersController extends Controller
 
 
     // ✅ Get all customers (exclude archived)
-    public function getCustomers()
+    public function getCustomers(Request $request)
     {
-        $customers = Customers::where('is_archived', 0)->get();
+        // Default per page = 10 if not specified
+        $perPage = $request->input('per_page', 10);
+
+        $customers = Customers::where('is_archived', 0)->paginate($perPage);
+
+        // Transform each customer to include profile_picture full URL
+        $customers->getCollection()->transform(function ($customer) {
+            $customer->profile_picture = $customer->profile_picture
+                ? asset('pos_files/' . $customer->profile_picture)
+                : null;
+            return $customer;
+        });
 
         return response()->json([
             'isSuccess' => true,
-            'customers' => $customers
+            'customers' => $customers,
+            'pagination' => [
+                'current_page' => $customers->currentPage(),
+                'per_page' => $customers->perPage(),
+                'total' => $customers->total(),
+                'last_page' => $customers->lastPage(),
+            ],
         ], 200);
     }
+
+
 
     // ✅ Get single customer
     public function getCustomerById($id)

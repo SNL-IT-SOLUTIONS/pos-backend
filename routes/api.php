@@ -158,4 +158,5 @@ Route::prefix('dropdown')->controller(DropdownController::class)->group(function
     Route::get('suppliers', 'getSuppliersForDropdown');
     Route::get('items', 'getItemsForDropdown');
     Route::get('customers', 'getCustomersForDropdown');
+    Route::get('roles', 'getRolesForDropdown');
 });

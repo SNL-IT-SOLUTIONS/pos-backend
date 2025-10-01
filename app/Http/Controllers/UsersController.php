@@ -24,11 +24,21 @@ class UsersController extends Controller
             ], 404);
         }
 
+        // Transform each user to include profile_picture with asset path
+        $users->getCollection()->transform(function ($user) {
+            $user->profile_picture = $user->profile_picture
+                ? asset('pos_files/' . $user->profile_picture)
+                : null;
+            return $user;
+        });
+
+
         return response()->json([
             'isSuccess' => true,
             'users'     => $users
         ]);
     }
+
 
     public function getUserById($id)
     {
