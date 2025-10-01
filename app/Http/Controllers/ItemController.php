@@ -58,9 +58,16 @@ class ItemController extends Controller
 
         return response()->json([
             'isSuccess' => true,
-            'items'     => $items,
+            'items'     => $items->items(), // only current page items
+            'pagination' => [
+                'current_page' => $items->currentPage(),
+                'per_page'     => $items->perPage(),
+                'total'        => $items->total(),
+                'last_page'    => $items->lastPage(),
+            ]
         ]);
     }
+
 
     // 📦 Get single item
     public function getItemById($id)
