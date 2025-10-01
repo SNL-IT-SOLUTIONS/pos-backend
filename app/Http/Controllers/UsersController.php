@@ -27,7 +27,7 @@ class UsersController extends Controller
         // Transform each user to include profile_picture with asset path
         $users->getCollection()->transform(function ($user) {
             $user->profile_picture = $user->profile_picture
-                ? asset('pos_files/' . $user->profile_picture)
+                ? asset($user->profile_picture)
                 : null;
             return $user;
         });

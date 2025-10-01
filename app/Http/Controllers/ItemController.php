@@ -51,7 +51,7 @@ class ItemController extends Controller
         $items->getCollection()->transform(function ($item) {
             $item->margin = $item->price - $item->cost;
             $item->product_image = $item->product_image
-                ? asset('pos_files/' . $item->product_image)
+                ? asset($item->product_image)
                 : null;
             return $item;
         });

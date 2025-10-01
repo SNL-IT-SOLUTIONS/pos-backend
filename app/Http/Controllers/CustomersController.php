@@ -71,7 +71,7 @@ class CustomersController extends Controller
         // Transform each customer to include profile_picture full URL
         $customers->getCollection()->transform(function ($customer) {
             $customer->profile_picture = $customer->profile_picture
-                ? asset('pos_files/' . $customer->profile_picture)
+                ? asset($customer->profile_picture)
                 : null;
             return $customer;
         });
