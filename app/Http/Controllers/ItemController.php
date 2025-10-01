@@ -32,11 +32,13 @@ class ItemController extends Controller
         }
 
         // ⚠️ Low stock filter
-        if ($request->has('low_stock') && $request->low_stock == true) {
+        if ($request->has('low_stock') && $request->boolean('low_stock')) {
             $query->whereColumn('stock', '<=', 'min_stock');
         }
 
-        $items = $query->get();
+        // 📄 Pagination (default 10 per page if not provided)
+        $perPage = $request->input('per_page', 10);
+        $items = $query->paginate($perPage);
 
         if ($items->isEmpty()) {
             return response()->json([
@@ -45,9 +47,12 @@ class ItemController extends Controller
             ], 404);
         }
 
-        // Add margin to each item
-        $items->map(function ($item) {
+        // 🖼️ Add margin + product image to each item
+        $items->getCollection()->transform(function ($item) {
             $item->margin = $item->price - $item->cost;
+            $item->product_image = $item->product_image
+                ? asset('pos_files/' . $item->product_image)
+                : null;
             return $item;
         });
 
