@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\BusinessInformation;
 
 class AuthController extends Controller
 {
@@ -31,14 +32,17 @@ class AuthController extends Controller
         $user = Auth::user();
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        // Get business information (assuming only one row exists)
+        $businessInfo = BusinessInformation::first();
+
         return response()->json([
             'isSuccess' => true,
             'message'   => 'Login successful.',
             'user'      => $user,
-            'token'     => $token
+            'token'     => $token,
+            'business'  => $businessInfo, // 👈 include it here
         ]);
     }
-
     /**
      * User Logout
      */

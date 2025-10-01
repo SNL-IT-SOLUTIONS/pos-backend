@@ -10,9 +10,12 @@ use Illuminate\Support\Facades\Storage;
 
 class UsersController extends Controller
 {
-    public function getAllUsers()
+    public function getAllUsers(Request $request)
     {
-        $users = User::where('is_archived', 0)->get();
+        // Default to 10 per page if not specified
+        $perPage = $request->input('per_page', 10);
+
+        $users = User::where('is_archived', 0)->paginate($perPage);
 
         if ($users->isEmpty()) {
             return response()->json([
