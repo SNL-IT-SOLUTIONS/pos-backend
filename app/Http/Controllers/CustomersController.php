@@ -20,7 +20,7 @@ class CustomersController extends Controller
             $validated = $request->validate([
                 'first_name'       => 'required|string|max:150',
                 'last_name'        => 'required|string|max:150',
-                'profile_picture'      => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:2048', // file upload
+                'profile_picture' => 'nullable|mimes:jpeg,png,jpg,webp,svg|max:2048',
                 'email'            => 'required|email|unique:customers,email',
                 'phone'            => 'nullable|string|max:50',
                 'address'          => 'nullable|string|max:255',
@@ -125,7 +125,7 @@ class CustomersController extends Controller
             $validated = $request->validate([
                 'first_name'     => 'sometimes|string|max:150',
                 'last_name'      => 'sometimes|string|max:150',
-                'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:2048',
+                'profile_picture' => 'nullable|mimes:jpeg,png,jpg,webp,svg|max:2048',
                 'email'          => 'sometimes|email|unique:customers,email,' . $id,
                 'phone'          => 'nullable|string|max:50',
                 'address'        => 'nullable|string|max:255',
