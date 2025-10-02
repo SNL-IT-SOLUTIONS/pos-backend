@@ -12,6 +12,7 @@ use App\Models\Category;
 use App\Models\Card;
 use App\Models\Supplier;
 use App\Models\User;
+use App\Models\Tags;
 
 class DropdownController extends Controller
 {
@@ -106,6 +107,20 @@ class DropdownController extends Controller
             'sales' => $sales
         ]);
     }
+
+    public function getTags()
+    {
+        $tags = Tags::select('id', 'tag_name', 'description', 'created_at')
+            ->where('is_archived', 0) // only active tags
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'isSuccess' => true,
+            'tags' => $tags
+        ]);
+    }
+
 
     public function getSuppliers()
     {
