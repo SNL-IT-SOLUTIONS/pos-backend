@@ -20,18 +20,17 @@ class SalesController extends Controller
 
     public function getAllSales(Request $request)
     {
-        $perPage = $request->input('per_page', 10);
+        $userId = auth()->id(); // or however you store cashier/user IDs
 
-        $sales = Sales::with([
-            'customer:id,first_name,last_name,email', // assuming customers table has these
-            'items.item:id,item_name,price'          // load items with minimal fields
-        ])
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
+        $sales = Sales::with('items.item')
+            ->where('status', 'held')
+            ->where('held_by', $userId) // 🔒 restrict to the logged-in cashier
+            ->orderBy('created_at', 'asc')
+            ->get();
 
         return response()->json([
-            'isSuccess'  => true,
-            'sales'      => $sales->items(),
+            'isSuccess' => true,
+            'held_sales' => $sales,
             'pagination' => [
                 'current_page' => $sales->currentPage(),
                 'per_page'     => $sales->perPage(),
