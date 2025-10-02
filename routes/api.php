@@ -137,7 +137,10 @@ Route::controller(SalesController::class)->middleware(['auth:sanctum'])->group(f
     Route::get('sales', 'getAllSales');
     Route::get('sales/{id}', 'getSaleById');
     Route::post('create/sales', 'createSale');
+    Route::post('hold/sales', 'holdSale');
+    Route::post('complete/held-sale/{id}', 'completeHeldSale');
 });
+
 
 
 
