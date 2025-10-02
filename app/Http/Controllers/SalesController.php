@@ -31,7 +31,7 @@ class SalesController extends Controller
 
         return response()->json([
             'isSuccess' => true,
-            'sales' => $sales->items(), // items only
+            'sale' => $sales->items(), // items only
             'pagination' => [
                 'current_page' => $sales->currentPage(),
                 'per_page'     => $sales->perPage(),
