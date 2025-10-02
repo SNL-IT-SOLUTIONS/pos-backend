@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 class ReportsController extends Controller
 {
 
-    public function reportSales(Request $request)
+    public function  reportSales(Request $request)
     {
         $filter = $request->input('filter', 'daily'); // daily, weekly, yearly, customer
         $range  = $request->input('range', null);     // today, week, month, quarter, year, custom
@@ -247,6 +247,62 @@ class ReportsController extends Controller
             'sales_by_category' => $salesByCategory,
         ]);
     }
+
+
+    public function getInventoryReport()
+    {
+        $lowStockThreshold = 10;
+
+        // Find max stock across items
+        $maxStock = DB::table('items')->max('stock');
+        $mediumStockThreshold = intval($maxStock * 0.5); // 50% of max stock
+
+        // === Stock Level Overview ===
+        $lowStock = DB::table('items')->where('stock', '<=', $lowStockThreshold)->count();
+        $mediumStock = DB::table('items')->whereBetween('stock', [$lowStockThreshold + 1, $mediumStockThreshold])->count();
+        $inStock = DB::table('items')->where('stock', '>', $mediumStockThreshold)->count();
+        $outOfStock = DB::table('items')->where('stock', '=', 0)->count();
+
+        // === Inventory Summary ===
+        $totalItems = DB::table('items')->count();
+        $totalValue = DB::table('items')->sum(DB::raw('stock * price'));
+        $categories = DB::table('categories')->count();
+
+        // === Inventory by Category ===
+        $categoryBreakdown = DB::table('categories')
+            ->leftJoin('items', 'categories.id', '=', 'items.category_id')
+            ->select('categories.category_name', DB::raw('COUNT(items.id) as total_items'))
+            ->groupBy('categories.id', 'categories.category_name')
+            ->get();
+
+        return response()->json([
+            'report_type' => 'Inventory Report',
+            'inventory_summary' => [
+                'total_items'   => $totalItems,
+                'total_value'   => "$" . number_format($totalValue, 2),
+                'categories'    => $categories,
+                'out_of_stock'  => $outOfStock
+            ],
+            'stock_levels' => [
+                'low_stock' => [
+                    'label' => 'Need reorder',
+                    'count' => $lowStock
+                ],
+                'medium_stock' => [
+                    'label' => 'Monitor closely (≤ 50% stock)',
+                    'count' => $mediumStock
+                ],
+                'in_stock' => [
+                    'label' => 'Good levels (> 50%)',
+                    'count' => $inStock
+                ],
+                'out_of_stock' => $outOfStock
+            ],
+            'inventory_by_category' => $categoryBreakdown
+        ]);
+    }
+
+
 
     public function getPaymentAnalysisReport(Request $request)
     {
