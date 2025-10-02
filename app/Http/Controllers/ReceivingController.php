@@ -72,7 +72,7 @@ class ReceivingController extends Controller
         try {
             $validated = $request->validate([
                 'supplier_id' => 'required|exists:suppliers,id',
-                'expected_delivery_date' => 'nullable|date',
+                'expected_delivery_date' => 'required|date',
                 'order_notes' => 'nullable|string',
                 'items' => 'required|array|min:1',
                 'items.*.item_id' => [
