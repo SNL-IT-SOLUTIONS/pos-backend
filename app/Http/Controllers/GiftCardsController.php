@@ -48,6 +48,12 @@ class GiftCardsController extends Controller
 
         $giftCards = GiftCards::with(['customer', 'card'])->paginate($perPage);
 
+        // Totals (ignores pagination)
+        $totalIssued = GiftCards::sum('value');
+        $totalBalance = GiftCards::sum('balance');
+        $totalRedeemed = $totalIssued - $totalBalance;
+        $activeCards = GiftCards::where('is_active', true)->where('is_archived', false)->count();
+
         return response()->json([
             'isSuccess'  => true,
             'gift_cards' => $giftCards->items(),
@@ -57,8 +63,15 @@ class GiftCardsController extends Controller
                 'total'        => $giftCards->total(),
                 'last_page'    => $giftCards->lastPage(),
             ],
+            'analytics' => [
+                'total_issued'   => $totalIssued,
+                'total_balance'  => $totalBalance,
+                'total_redeemed' => $totalRedeemed,
+                'active_cards'   => $activeCards,
+            ]
         ]);
     }
+
 
 
     // Get single GiftCard by ID
