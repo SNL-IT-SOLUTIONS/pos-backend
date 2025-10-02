@@ -8,6 +8,13 @@ use Illuminate\Http\Request;
 
 class ReportsController extends Controller
 {
+    public function __construct()
+    {
+        // All routes in this controller require authentication
+        $this->middleware('auth:sanctum');
+    }
+
+
 
     public function  reportSales(Request $request)
     {
