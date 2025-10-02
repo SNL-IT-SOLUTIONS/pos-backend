@@ -41,6 +41,27 @@ class SalesController extends Controller
         ]);
     }
 
+    public function getSaleById($id)
+    {
+        $sale = Sales::with([
+            'customer:id,first_name,last_name,email',
+            'items.item:id,item_name,price'
+        ])->find($id);
+
+        if (!$sale) {
+            return response()->json([
+                'isSuccess' => false,
+                'message'   => 'Sale not found.'
+            ], 404);
+        }
+
+        return response()->json([
+            'isSuccess' => true,
+            'sale'      => $sale
+        ]);
+    }
+
+
     public function createSale(Request $request)
     {
         $validated = $request->validate([
