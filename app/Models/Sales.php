@@ -16,6 +16,7 @@ class Sales extends Model
         'discount',
         'net_amount',
         'payment_type',
+        'held_by'
     ];
 
     // Each sale has many sale items

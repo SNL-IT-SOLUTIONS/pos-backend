@@ -17,6 +17,7 @@ use App\Http\Controllers\ItemController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ReceivingController;
 use App\Http\Controllers\SalesController;
+use App\Http\Controllers\ReportsController;
 
 
 /*
@@ -136,6 +137,7 @@ Route::controller(ReceivingController::class)->middleware(['auth:sanctum'])->gro
 Route::controller(SalesController::class)->middleware(['auth:sanctum'])->group(function () {
     Route::get('sales', 'getAllSales');
     Route::get('sales/{id}', 'getSaleById');
+    Route::get('held-sales', 'getHeldSales');
     Route::post('create/sales', 'createSale');
     Route::post('hold/sales', 'holdSale');
     Route::post('complete/held-sale/{id}', 'completeHeldSale');
@@ -148,6 +150,12 @@ Route::controller(SalesController::class)->middleware(['auth:sanctum'])->group(f
 Route::controller(BusinessInformationController::class)->middleware(['auth:sanctum'])->group(function () {
     Route::get('get-business-information', 'getBusinessInformation');
     Route::post('save-business-information', 'saveBusinessInformation');
+});
+
+
+//REPORTS
+Route::controller(ReportsController::class)->middleware(['auth:sanctum'])->group(function () {
+    Route::get('report/sales', 'reportSales'); // filter: daily, weekly, yearly, customer
 });
 
 
