@@ -157,5 +157,6 @@ Route::prefix('dropdown')->controller(DropdownController::class)->group(function
     Route::get('gift-cards', 'getGiftCards');
     Route::get('suppliers', 'getSuppliers');
     Route::get('customers', 'getCustomers');
+    Route::get('items', 'getItems');
     Route::get('roles', 'getRoles');
 });
