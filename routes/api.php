@@ -156,6 +156,11 @@ Route::controller(BusinessInformationController::class)->middleware(['auth:sanct
 //REPORTS
 Route::controller(ReportsController::class)->middleware(['auth:sanctum'])->group(function () {
     Route::get('report/sales', 'reportSales'); // filter: daily, weekly, yearly, customer
+    Route::get('report/sales/analytics', 'salesAnalytics'); // summary
+    Route::get('report/item-performance', 'itemPerformanceReport'); // top items, sales by category
+    Route::get('report/payment-analysis', 'getPaymentAnalysisReport'); // payment method distribution
+    Route::get('report/sales-forecast', 'getBusinessTrendsForecast'); // simple forecast based on past sales
+
 });
 
 
