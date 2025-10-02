@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\Storage;
 
 class ItemController extends Controller
 {
+    public function __construct()
+    {
+        // All routes in this controller require authentication
+        $this->middleware('auth:sanctum');
+    }
     // 📦 Get all items with optional filters
     public function getAllItems(Request $request)
     {
@@ -89,7 +94,6 @@ class ItemController extends Controller
         ]);
     }
 
-    // 🆕 Create item
     // 🆕 Create item
     public function createItem(Request $request)
     {

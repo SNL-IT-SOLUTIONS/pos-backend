@@ -12,6 +12,11 @@ use App\Models\GiftCards;
 
 class SalesController extends Controller
 {
+    public function __construct()
+    {
+        // All routes in this controller require authentication
+        $this->middleware('auth:sanctum');
+    }
     public function createSale(Request $request)
     {
         $validated = $request->validate([

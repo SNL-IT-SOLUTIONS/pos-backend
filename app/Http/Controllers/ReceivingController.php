@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\DB;
 
 class ReceivingController extends Controller
 {
+    public function __construct()
+    {
+        // All routes in this controller require authentication
+        $this->middleware('auth:sanctum');
+    }
     // Get all receivings with supplier + items
     public function getAllReceivings(Request $request)
     {
@@ -69,10 +74,25 @@ class ReceivingController extends Controller
                 'expected_delivery_date' => 'nullable|date',
                 'order_notes' => 'nullable|string',
                 'items' => 'required|array|min:1',
-                'items.*.item_id' => 'required|exists:items,id',
+                'items.*.item_id' => [
+                    'required',
+                    'integer',
+                    Rule::exists('items', 'id'), // basic exists validation
+                ],
                 'items.*.qty' => 'required|integer|min:1',
                 'items.*.discount' => 'nullable|numeric|min:0|max:100',
             ]);
+
+            // Extra validation: ensure items belong to supplier
+            foreach ($validated['items'] as $itemData) {
+                $item = Item::find($itemData['item_id']);
+                if ($item->supplier_id != $validated['supplier_id']) {
+                    return response()->json([
+                        'isSuccess' => false,
+                        'message' => "Item {$item->id} does not belong to the selected supplier."
+                    ], 422);
+                }
+            }
 
             // Create receiving header
             $receiving = Receiving::create([
@@ -89,7 +109,6 @@ class ReceivingController extends Controller
             $discountTotal = 0;
 
             foreach ($validated['items'] as $itemData) {
-                // Get cost from items table
                 $item = Item::findOrFail($itemData['item_id']);
                 $lineTotal = $item->cost * $itemData['qty'];
                 $discount = isset($itemData['discount']) ? ($lineTotal * ($itemData['discount'] / 100)) : 0;
@@ -98,7 +117,7 @@ class ReceivingController extends Controller
                 ReceivingItem::create([
                     'receiving_id' => $receiving->id,
                     'item_id' => $item->id,
-                    'cost' => $item->cost, // pulled from DB, not from request
+                    'cost' => $item->cost, // pulled from DB
                     'qty' => $itemData['qty'],
                     'discount' => $itemData['discount'] ?? 0,
                     'total' => $finalTotal,
@@ -131,6 +150,7 @@ class ReceivingController extends Controller
             ], 500);
         }
     }
+
 
     // ✅ Mark receiving as completed (update stock)
     public function completeReceiving($id)

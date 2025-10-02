@@ -10,6 +10,12 @@ use Illuminate\Support\Facades\Storage;
 
 class UsersController extends Controller
 {
+    public function __construct()
+    {
+        // All routes in this controller require authentication
+        $this->middleware('auth:sanctum');
+    }
+
     public function getAllUsers(Request $request)
     {
         // Default to 10 per page if not specified

@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 
 class ReceivingItemController extends Controller
 {
+    public function __construct()
+    {
+        // All routes in this controller require authentication
+        $this->middleware('auth:sanctum');
+    }
     // 📦 Get all receiving items for a given receiving
     public function getByReceiving($receivingId)
     {

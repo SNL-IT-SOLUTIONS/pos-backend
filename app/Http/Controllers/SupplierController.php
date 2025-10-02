@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
+    public function __construct()
+    {
+        // All routes in this controller require authentication
+        $this->middleware('auth:sanctum');
+    }
     public function getAllSuppliers(Request $request)
     {
         $perPage = $request->input('per_page', 10);
