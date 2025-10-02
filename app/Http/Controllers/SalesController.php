@@ -17,6 +17,30 @@ class SalesController extends Controller
         // All routes in this controller require authentication
         $this->middleware('auth:sanctum');
     }
+
+    public function getAllSales(Request $request)
+    {
+        $perPage = $request->input('per_page', 10);
+
+        $sales = Sales::with([
+            'customer:id,first_name,last_name,email', // assuming customers table has these
+            'items.item:id,item_name,price'          // load items with minimal fields
+        ])
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'isSuccess'  => true,
+            'sales'      => $sales->items(),
+            'pagination' => [
+                'current_page' => $sales->currentPage(),
+                'per_page'     => $sales->perPage(),
+                'total'        => $sales->total(),
+                'last_page'    => $sales->lastPage(),
+            ]
+        ]);
+    }
+
     public function createSale(Request $request)
     {
         $validated = $request->validate([
