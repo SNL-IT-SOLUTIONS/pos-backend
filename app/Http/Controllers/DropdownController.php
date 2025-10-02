@@ -73,6 +73,7 @@ class DropdownController extends Controller
     public function getCustomers()
     {
         $customers = Customers::select('id', 'first_name', 'last_name')
+            ->with(['giftCards:id,customer_id,gift_card_number,gift_card_name,balance,expiration_date'])
             ->get();
 
         return response()->json([
@@ -80,6 +81,7 @@ class DropdownController extends Controller
             'customers' => $customers
         ]);
     }
+
 
     // Get all active gift cards
     public function getGiftCards()

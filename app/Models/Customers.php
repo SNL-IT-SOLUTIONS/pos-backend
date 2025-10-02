@@ -25,4 +25,11 @@ class Customers extends Model
         'comments',
         'is_archived'
     ];
+
+    public function giftCards()
+    {
+        return $this->hasMany(GiftCards::class, 'customer_id')
+            ->where('is_active', 1) // only active
+            ->where('is_archived', 0); // not archived
+    }
 }
