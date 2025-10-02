@@ -20,18 +20,23 @@ class SalesController extends Controller
 
     public function getAllSales(Request $request)
     {
-        $userId = auth()->id();
+        $user = auth()->user();
         $perPage = $request->input('per_page', 10);
 
-        $sales = Sales::with('items.item')
+        $salesQuery = Sales::with('items.item')
             ->where('status', 'completed')
-            ->where('held_by', $userId)
-            ->orderBy('created_at', 'asc')
-            ->paginate($perPage);
+            ->orderBy('created_at', 'asc');
+
+        // ✅ Check role by role_name
+        if (strtolower($user->role->role_name) !== 'admin') {
+            $salesQuery->where('held_by', $user->id);
+        }
+
+        $sales = $salesQuery->paginate($perPage);
 
         return response()->json([
             'isSuccess' => true,
-            'sales' => $sales->items(), // items only
+            'sales' => $sales->items(),
             'pagination' => [
                 'current_page' => $sales->currentPage(),
                 'per_page'     => $sales->perPage(),

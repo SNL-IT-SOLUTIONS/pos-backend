@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\BusinessInformation;
+use App\Models\Roles;
 
 class AuthController extends Controller
 {
@@ -15,11 +16,10 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'login'    => 'required|string', // can be email or username
+            'login'    => 'required|string', // email or username
             'password' => 'required|string'
         ]);
 
-        // Check if the login input is an email
         $fieldType = filter_var($credentials['login'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
         if (!Auth::attempt([$fieldType => $credentials['login'], 'password' => $credentials['password']])) {
@@ -29,20 +29,28 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user = Auth::user();
+        $user = Auth::user()->load('role'); // 👈 load role relationship
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // Get business information (assuming only one row exists)
         $businessInfo = BusinessInformation::first();
 
         return response()->json([
             'isSuccess' => true,
             'message'   => 'Login successful.',
-            'user'      => $user,
+            'user'      => [
+                'id'         => $user->id,
+                'first_name' => $user->first_name,
+                'last_name'  => $user->last_name,
+                'email'      => $user->email,
+                'username'   => $user->username,
+                'role_id'    => $user->role_id,
+                'role_name'  => $user->role ? $user->role->role_name : null, // 👈 here
+            ],
             'token'     => $token,
-            'business'  => $businessInfo, // 👈 include it here
+            'business'  => $businessInfo,
         ]);
     }
+
     /**
      * User Logout
      */
