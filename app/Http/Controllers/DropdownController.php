@@ -56,18 +56,6 @@ class DropdownController extends Controller
         ]);
     }
 
-    // Get all active items
-    public function getItems()
-    {
-        $items = Item::select('id', 'name', 'price', 'stock')
-            ->where('stock', '>', 0)
-            ->get();
-
-        return response()->json([
-            'isSuccess' => true,
-            'items' => $items
-        ]);
-    }
 
     // Get all customers
     public function getCustomers()
