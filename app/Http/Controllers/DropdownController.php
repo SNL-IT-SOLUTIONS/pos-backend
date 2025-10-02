@@ -109,7 +109,26 @@ class DropdownController extends Controller
 
     public function getSuppliers()
     {
-        $suppliers = Supplier::select('id', 'supplier_name', 'contact_name', 'phone')
+        $suppliers = Supplier::with(['items' => function ($query) {
+            $query->select(
+                'id',
+                'item_name',
+                'product_image',
+                'description',
+                'category_id',
+                'supplier_id',
+                'cost',
+                'discount',
+                'price',
+                'margin',
+                'stock',
+                'min_stock',
+                'barcode',
+                'is_active',
+                'is_archived'
+            );
+        }])
+            ->select('id', 'company_name', 'contact_person', 'phone', 'email')
             ->where('is_active', 1)
             ->get();
 
