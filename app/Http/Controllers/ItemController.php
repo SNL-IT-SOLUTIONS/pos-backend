@@ -45,7 +45,7 @@ class ItemController extends Controller
         }
 
         // 📄 Pagination (default 10 per page if not provided)
-        $perPage = $request->input('per_page', 10);
+        $perPage = $request->input('per_page', 5);
         $items = $query->paginate($perPage);
 
         if ($items->isEmpty()) {
