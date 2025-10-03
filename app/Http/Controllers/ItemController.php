@@ -44,9 +44,9 @@ class ItemController extends Controller
             $query->whereColumn('stock', '<=', 'min_stock');
         }
 
-        // 📄 Cursor Pagination (default 5 per page if not provided)
-        $perPage = $request->input('per_page', 5);
-        $items = $query->cursorPaginate($perPage);
+        // 📄 Pagination (default 10 per page if not provided)
+        $perPage = $request->input('per_page', 10);
+        $items = $query->paginate($perPage);
 
         if ($items->isEmpty()) {
             return response()->json([
@@ -66,15 +66,15 @@ class ItemController extends Controller
 
         return response()->json([
             'isSuccess' => true,
-            'items'     => $items->items(), // current set
+            'items'     => $items->items(), // only current page items
             'pagination' => [
-                'per_page'    => $items->perPage(),
-                'next_cursor' => $items->nextCursor()?->encode(),
-                'prev_cursor' => $items->previousCursor()?->encode(),
+                'current_page' => $items->currentPage(),
+                'per_page'     => $items->perPage(),
+                'total'        => $items->total(),
+                'last_page'    => $items->lastPage(),
             ]
         ]);
     }
-
 
 
     // 📦 Get single item
