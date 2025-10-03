@@ -40,10 +40,8 @@ class AuthController extends Controller
 
         // 📝 Set remarks based on role
         $remarks = match ($user->role->role_name ?? '') {
-            'Manager'        => 'Manager shift',
+            'Admin'        => 'Admin shift',
             'Cashier'        => 'Regular shift',
-            'Sales Associate' => 'Part-time shift',
-            'Supervisor'     => 'Early shift',
             default          => 'Login'
         };
 
