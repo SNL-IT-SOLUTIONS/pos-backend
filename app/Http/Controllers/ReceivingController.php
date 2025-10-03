@@ -31,16 +31,23 @@ class ReceivingController extends Controller
             $query->where('status', $request->status);
         }
 
-        $receivings = $query->paginate($perPage);
+        // ⚡ Use cursor pagination for infinite scroll
+        $receivings = $query->cursorPaginate($perPage);
+
+        if ($receivings->isEmpty()) {
+            return response()->json([
+                'isSuccess' => false,
+                'message'   => 'No receivings found.',
+            ], 404);
+        }
 
         return response()->json([
             'isSuccess'  => true,
-            'receivings' => $receivings->items(),
+            'receivings' => $receivings->items(), // current batch
             'pagination' => [
-                'current_page' => $receivings->currentPage(),
-                'per_page'     => $receivings->perPage(),
-                'total'        => $receivings->total(),
-                'last_page'    => $receivings->lastPage(),
+                'per_page'    => $receivings->perPage(),
+                'next_cursor' => $receivings->nextCursor()?->encode(),
+                'prev_cursor' => $receivings->previousCursor()?->encode(),
             ],
         ]);
     }
