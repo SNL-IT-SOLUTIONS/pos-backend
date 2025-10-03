@@ -40,10 +40,13 @@ class AuthController extends Controller
 
         // 📝 Set remarks based on role
         $remarks = match ($user->role->role_name ?? '') {
-            'Admin'        => 'Admin shift',
-            'Cashier'        => 'Regular shift',
-            default          => 'Login'
+            'Admin'   => 'Admin shift',
+            'Cashier' => 'Regular shift',
+            default   => 'Login'
         };
+
+        // ✅ Update user login status
+        $user->update(['is_login' => true]);
 
         // 📝 Insert DTR record on login
         DtrRecord::create([
@@ -63,6 +66,7 @@ class AuthController extends Controller
                 'username'   => $user->username,
                 'role_id'    => $user->role_id,
                 'role_name'  => $user->role ? $user->role->role_name : null,
+                'is_login'   => $user->is_login, // 👈 return login status
             ],
             'token'     => $token,
             'business'  => $businessInfo,
@@ -75,6 +79,9 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $user = $request->user();
+
+        // ✅ Update user login status
+        $user->update(['is_login' => false]);
 
         // ⏱ Update latest DTR record
         $lastRecord = DtrRecord::where('user_id', $user->id)

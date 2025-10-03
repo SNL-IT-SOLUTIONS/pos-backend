@@ -18,6 +18,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ReceivingController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\ReportsController;
+use App\Http\Controllers\DtrRecordController;
 
 
 /*
@@ -164,6 +165,11 @@ Route::controller(ReportsController::class)->middleware(['auth:sanctum'])->group
 
 });
 
+
+//DTR RECORDS
+Route::controller(DtrRecordController::class)->middleware(['auth:sanctum'])->group(function () {
+    Route::get('dtr-records', 'getDtrRecords');
+});
 
 //DROPDOWN
 Route::prefix('dropdown')->controller(DropdownController::class)->group(function () {

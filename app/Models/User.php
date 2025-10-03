@@ -33,8 +33,7 @@ class User extends Authenticatable
         'zip',
         'country',
         'comments',
-        'login_start_time',
-        'login_end_time',
+        'is_login'
     ];
 
     /**

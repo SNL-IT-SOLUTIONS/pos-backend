@@ -16,4 +16,8 @@ class DtrRecord extends Model
         'total_hours',
         'remarks',
     ];
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }
