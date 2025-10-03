@@ -27,6 +27,9 @@ class ItemController extends Controller
                     ->orWhere('barcode', 'LIKE', "%$search%")
                     ->orWhereHas('supplier', function ($sq) use ($search) {
                         $sq->where('company_name', 'LIKE', "%$search%");
+                    })
+                    ->orWhereHas('category', function ($cq) use ($search) {
+                        $cq->where('category_name', 'LIKE', "%$search%");
                     });
             });
         }
