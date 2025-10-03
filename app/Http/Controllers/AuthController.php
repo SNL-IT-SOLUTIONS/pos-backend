@@ -108,8 +108,7 @@ class AuthController extends Controller
         }
 
         // 🔑 Revoke tokens
-        $user->tokens()->delete();
-
+        $request->user()->currentAccessToken()->delete();
         return response()->json([
             'isSuccess' => true,
             'message'   => 'Logged out successfully'
