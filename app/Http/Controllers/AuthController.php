@@ -16,6 +16,7 @@ class AuthController extends Controller
      * User Login (allow email or username)
      */
 
+
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -37,11 +38,20 @@ class AuthController extends Controller
 
         $businessInfo = BusinessInformation::first();
 
+        // 📝 Set remarks based on role
+        $remarks = match ($user->role->role_name ?? '') {
+            'Manager'        => 'Manager shift',
+            'Cashier'        => 'Regular shift',
+            'Sales Associate' => 'Part-time shift',
+            'Supervisor'     => 'Early shift',
+            default          => 'Login'
+        };
+
         // 📝 Insert DTR record on login
         DtrRecord::create([
             'user_id'          => $user->id,
             'login_start_time' => Carbon::now(),
-            'remarks'          => 'Login',
+            'remarks'          => $remarks,
         ]);
 
         return response()->json([
@@ -75,9 +85,20 @@ class AuthController extends Controller
 
         if ($lastRecord && !$lastRecord->login_end_time) {
             $lastRecord->login_end_time = Carbon::now();
-            $lastRecord->total_hours = Carbon::parse($lastRecord->login_start_time)
-                ->diffInHours(Carbon::now()); // you can use diffInMinutes if needed
-            $lastRecord->remarks = 'Logout';
+
+            // Calculate total hours worked
+            $hours = Carbon::parse($lastRecord->login_start_time)->diffInHours(Carbon::now());
+            $lastRecord->total_hours = $hours;
+
+            // Update remarks based on hours
+            if ($hours < 6) {
+                $lastRecord->remarks = 'Part-time shift';
+            } elseif ($hours <= 9) {
+                $lastRecord->remarks = 'Regular shift';
+            } else {
+                $lastRecord->remarks = 'Overtime shift';
+            }
+
             $lastRecord->save();
         }
 
