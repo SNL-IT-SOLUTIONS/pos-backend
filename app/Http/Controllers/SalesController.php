@@ -27,24 +27,32 @@ class SalesController extends Controller
             ->where('status', 'completed')
             ->orderBy('created_at', 'asc');
 
-        // ✅ Check role by role_name
+        // ✅ Check role by role_name (non-admins only see their own sales)
         if (strtolower($user->role->role_name) !== 'admin') {
             $salesQuery->where('held_by', $user->id);
         }
 
-        $sales = $salesQuery->paginate($perPage);
+        // ⚡ Cursor pagination for infinite scroll
+        $sales = $salesQuery->cursorPaginate($perPage);
+
+        if ($sales->isEmpty()) {
+            return response()->json([
+                'isSuccess' => false,
+                'message'   => 'No sales found.',
+            ], 404);
+        }
 
         return response()->json([
             'isSuccess' => true,
-            'sales' => $sales->items(),
+            'sales'     => $sales->items(), // current batch of sales
             'pagination' => [
-                'current_page' => $sales->currentPage(),
-                'per_page'     => $sales->perPage(),
-                'total'        => $sales->total(),
-                'last_page'    => $sales->lastPage(),
+                'per_page'    => $sales->perPage(),
+                'next_cursor' => $sales->nextCursor()?->encode(),
+                'prev_cursor' => $sales->previousCursor()?->encode(),
             ]
         ]);
     }
+
 
 
     public function getSaleById($id)
