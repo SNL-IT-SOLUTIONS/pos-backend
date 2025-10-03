@@ -19,7 +19,7 @@ class ReceivingController extends Controller
     // Get all receivings with supplier + items
     public function getAllReceivings(Request $request)
     {
-        $perPage = $request->input('per_page', 10);
+        $perPage = $request->input('per_page', 8);
 
         $query = Receiving::with(['supplier', 'items.item']);
 
