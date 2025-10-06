@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use App\Models\Category;
 
 class SupplierController extends Controller
 {
@@ -25,17 +26,32 @@ class SupplierController extends Controller
             ], 404);
         }
 
+        // 📊 Summary info
+        $totalSuppliers = Supplier::count();
+        $activeSuppliers = Supplier::where('is_active', 1)->count();
+
+        // ✅ Count unique categories from suppliers
+        $categoryCount = Supplier::whereNotNull('category_id')
+            ->distinct('category_id')
+            ->count('category_id');
+
         return response()->json([
             'isSuccess'  => true,
             'suppliers'  => $suppliers->items(),
+            'summary'    => [
+                'total_suppliers'  => $totalSuppliers,
+                'active_suppliers' => $activeSuppliers,
+                'categories'       => $categoryCount,
+            ],
             'pagination' => [
                 'current_page' => $suppliers->currentPage(),
                 'per_page'     => $suppliers->perPage(),
                 'total'        => $suppliers->total(),
                 'last_page'    => $suppliers->lastPage(),
             ],
-        ]);
+        ], 200);
     }
+
 
 
     public function getSupplierById($id)

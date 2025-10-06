@@ -66,9 +66,10 @@ class CustomersController extends Controller
         // Default per page = 10 if not specified
         $perPage = $request->input('per_page', 10);
 
+        // Base query
         $customers = Customers::where('is_archived', 0)->paginate($perPage);
 
-        // Transform each customer to include profile_picture full URL
+        // Transform profile picture URL
         $customers->getCollection()->transform(function ($customer) {
             $customer->profile_picture = $customer->profile_picture
                 ? asset($customer->profile_picture)
@@ -76,9 +77,19 @@ class CustomersController extends Controller
             return $customer;
         });
 
+        // Summary info
+        $totalCustomers = Customers::count();
+        $activeCustomers = Customers::where('is_archived', 0)->count();
+        $customerIDCount = $customers->count();
+
         return response()->json([
             'isSuccess'  => true,
             'customers'  => $customers->items(),
+            'summary'    => [
+                'total_customers' => $totalCustomers,
+                'active_customers' => $activeCustomers,
+                'customer_ids' => $customerIDCount,
+            ],
             'pagination' => [
                 'current_page' => $customers->currentPage(),
                 'per_page'     => $customers->perPage(),
@@ -87,6 +98,7 @@ class CustomersController extends Controller
             ],
         ], 200);
     }
+
 
 
 

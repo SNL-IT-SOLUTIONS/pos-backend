@@ -44,7 +44,7 @@ class ItemController extends Controller
             $query->whereColumn('stock', '<=', 'min_stock');
         }
 
-        // 📄 Cursor Pagination (default 10 per page if not provided)
+        // 📄 Cursor Pagination (default 10 per page)
         $perPage = $request->input('per_page', 10);
         $items = $query->cursorPaginate($perPage);
 
@@ -55,7 +55,7 @@ class ItemController extends Controller
             ], 404);
         }
 
-        // 🖼️ Add margin + product image to each item
+        // 🖼️ Add margin + full image path
         $items->getCollection()->transform(function ($item) {
             $item->margin = $item->price - $item->cost;
             $item->product_image = $item->product_image
@@ -64,13 +64,29 @@ class ItemController extends Controller
             return $item;
         });
 
+        // 📊 Summary counts
+        $loadedItems = Item::where('is_active', 1)->count();
+        $inStock = Item::where('is_active', 1)->where('stock', '>', 0)->count();
+        $lowStock = Item::where('is_active', 1)
+            ->whereColumn('stock', '<=', 'min_stock')
+            ->where('stock', '>', 0)
+            ->count();
+        $outOfStock = Item::where('is_active', 1)->where('stock', '=', 0)->count();
+
+        // ✅ Final response
         return response()->json([
             'isSuccess'   => true,
-            'items'       => $items->items(), // current chunk of items
+            'items'       => $items->items(),
+            'summary'     => [
+                'loaded_items' => $loadedItems,
+                'in_stock'     => $inStock,
+                'low_stock'    => $lowStock,
+                'out_of_stock' => $outOfStock,
+            ],
             'pagination'  => [
-                'per_page'   => $items->perPage(),
-                'next_cursor' => $items->nextCursor()?->encode(),
-                'prev_cursor' => $items->previousCursor()?->encode(),
+                'per_page'     => $items->perPage(),
+                'next_cursor'  => $items->nextCursor()?->encode(),
+                'prev_cursor'  => $items->previousCursor()?->encode(),
             ]
         ]);
     }
