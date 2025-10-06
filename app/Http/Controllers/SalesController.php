@@ -77,24 +77,24 @@ class SalesController extends Controller
 
     public function getHeldSales(Request $request)
     {
-        $perPage = $request->input('per_page', 10); // default 10 if not provided
+        $perPage = $request->input('per_page', 10); // default 10
 
         $sales = Sales::with('items.item')
             ->where('status', 'held')
             ->orderBy('created_at', 'asc')
-            ->paginate($perPage);
+            ->cursorPaginate($perPage);
 
         return response()->json([
             'isSuccess'  => true,
             'held_sales' => $sales->items(),
             'pagination' => [
-                'current_page' => $sales->currentPage(),
-                'per_page'     => $sales->perPage(),
-                'total'        => $sales->total(),
-                'last_page'    => $sales->lastPage(),
-            ]
+                'per_page'    => $sales->perPage(),
+                'next_cursor' => $sales->nextCursor()?->encode(),
+                'prev_cursor' => $sales->previousCursor()?->encode(),
+            ],
         ]);
     }
+
 
 
 
