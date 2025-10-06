@@ -55,7 +55,7 @@ class ReportsController extends Controller
                 break;
         }
 
-        // ✅ Build report based on filter type
+        //  Build report based on filter type
         switch ($filter) {
             case 'daily':
                 $report = $query->selectRaw('DATE(created_at) as date, 
@@ -105,7 +105,7 @@ class ReportsController extends Controller
                 ], 400);
         }
 
-        // ✅ Items Sold (from sales_items)
+        //  Items Sold (from sales_items)
         $itemsSold = DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
             ->where('sales.status', 'completed');
@@ -216,7 +216,7 @@ class ReportsController extends Controller
 
     public function itemPerformanceReport()
     {
-        // ✅ Top Selling Items by Quantity & Revenue
+        //  Top Selling Items by Quantity & Revenue
         $topItems = DB::table('sale_items')
             ->join('items', 'sale_items.item_id', '=', 'items.id')
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
@@ -232,7 +232,7 @@ class ReportsController extends Controller
             ->limit(10) // top 10 best sellers
             ->get();
 
-        // ✅ Sales by Category (Revenue distribution)
+        //  Sales by Category (Revenue distribution)
         $salesByCategory = DB::table('sale_items')
             ->join('items', 'sale_items.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')

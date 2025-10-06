@@ -113,7 +113,7 @@ class SalesController extends Controller
 
         return DB::transaction(function () use ($validated) {
 
-            // 🧮 Calculate total
+            //  Calculate total
             $total = 0;
             foreach ($validated['items'] as $item) {
                 $product = Item::findOrFail($item['id']);
@@ -123,7 +123,7 @@ class SalesController extends Controller
                 $total += $product->price * $item['qty'];
             }
 
-            // 🎁 Apply gift card if provided
+            // Apply gift card if provided
             $discount = 0;
             if (!empty($validated['gift_card_id'])) {
                 $giftCard = GiftCards::where('id', $validated['gift_card_id'])
@@ -141,7 +141,7 @@ class SalesController extends Controller
                 $giftCard->save();
             }
 
-            // 💰 Net amount and payment logic
+            // Net amount and payment logic
             $net = $total - $discount;
             $paymentType = $validated['payment_type'] ?? 'cash';
             $amountPaid = $validated['amount_paid'];
@@ -151,7 +151,7 @@ class SalesController extends Controller
                 throw new \Exception("Insufficient payment. Customer must pay at least ₱" . number_format($net, 2));
             }
 
-            // 🧾 Create sale record
+            //  Create sale record
             $sale = Sales::create([
                 'customer_id'  => $validated['customer_id'] ?? null,
                 'total_amount' => $total,
@@ -163,7 +163,7 @@ class SalesController extends Controller
                 'status'       => 'completed',
             ]);
 
-            // 💼 Create sale items and decrease stock
+            //  Create sale items and decrease stock
             foreach ($validated['items'] as $item) {
                 $product = Item::findOrFail($item['id']);
 
@@ -181,7 +181,7 @@ class SalesController extends Controller
                 $product->save();
             }
 
-            // 🧾 Build receipt data
+            // Build receipt data
             $receipt = [
                 'sale_id'       => $sale->id,
                 'date'          => now()->format('M d, Y h:i A'),
@@ -275,7 +275,7 @@ class SalesController extends Controller
             $paymentType = $request->input('payment_type', 'cash');
             $amountPaid = $request->input('amount_paid', 0);
 
-            // 🧮 Gift card logic
+            // Gift card logic
             if ($request->filled('gift_card_id')) {
                 $giftCard = GiftCards::where('id', $request->gift_card_id)
                     ->where('is_active', 1)
@@ -292,7 +292,7 @@ class SalesController extends Controller
                 $giftCard->save();
             }
 
-            // 💰 Compute totals
+            // Compute totals
             $sale->discount = $discount;
             $sale->net_amount = $sale->total_amount - $discount;
             $sale->payment_type = $paymentType;
@@ -301,7 +301,7 @@ class SalesController extends Controller
             $sale->status = 'completed';
             $sale->save();
 
-            // 📦 Deduct stock for each item
+            //  Deduct stock for each item
             foreach ($sale->items as $saleItem) {
                 $product = Item::findOrFail($saleItem->item_id);
                 if ($saleItem->quantity > $product->stock) {
@@ -311,7 +311,7 @@ class SalesController extends Controller
                 $product->save();
             }
 
-            // 🧾 Receipt summary
+            //  Receipt summary
             $receipt = [
                 'sale_id'      => $sale->id,
                 'customer_id'  => $sale->customer_id,

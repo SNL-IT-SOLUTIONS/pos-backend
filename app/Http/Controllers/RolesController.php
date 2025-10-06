@@ -9,11 +9,11 @@ class RolesController extends Controller
 {
     public function __construct()
     {
-        // ✅ Protect all endpoints with Sanctum auth
+        //  Protect all endpoints with Sanctum auth
         $this->middleware('auth:sanctum');
     }
 
-    // ✅ Create new role
+    //  Create new role
     public function createRole(Request $request)
     {
         try {
@@ -41,7 +41,7 @@ class RolesController extends Controller
         }
     }
 
-    // ✅ Get all roles (exclude archived)
+    // Get all roles (exclude archived)
     public function getRoles(Request $request)
     {
         try {
@@ -76,7 +76,7 @@ class RolesController extends Controller
     }
 
 
-    // ✅ Get single role
+    // Get single role
     public function getRoleById($id)
     {
         try {
@@ -102,7 +102,7 @@ class RolesController extends Controller
         }
     }
 
-    // ✅ Update role
+    //  Update role
     public function updateRole(Request $request, $id)
     {
         try {
@@ -137,7 +137,7 @@ class RolesController extends Controller
         }
     }
 
-    // ✅ Soft delete role (set is_archived = 1)
+    //  Soft delete role (set is_archived = 1)
     public function archiveRole($id)
     {
         try {

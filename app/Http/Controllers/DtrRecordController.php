@@ -30,10 +30,10 @@ class DtrRecordController extends Controller
                 ->orWhere('remarks', 'LIKE', "%$search%");
         }
 
-        // 📄 Pagination
+        //  Pagination
         $records = $query->paginate($request->get('per_page', 10));
 
-        // 🧠 Transform data for display
+        //  Transform data for display
         $data = $records->getCollection()->transform(function ($record) {
             return [
                 'id'           => $record->id,
@@ -57,7 +57,7 @@ class DtrRecordController extends Controller
             ];
         });
 
-        // 📊 Summary Section
+        // Summary Section
         $currentlyWorking = \App\Models\User::where('is_login', 1)->count(); // 👈 logged in users
         $totalRecords = DtrRecord::count();
 
@@ -67,7 +67,7 @@ class DtrRecordController extends Controller
         $totalHoursThisPeriod = DtrRecord::whereBetween('login_start_time', [$startOfMonth, $endOfMonth])
             ->sum('total_hours');
 
-        // 🧮 Average Hours (based on total records, since active count removed)
+        //  Average Hours (based on total records, since active count removed)
         $averageHoursPerEmployee = $totalRecords > 0
             ? number_format($totalHoursThisPeriod / $totalRecords, 2)
             : 0;

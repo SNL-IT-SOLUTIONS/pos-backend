@@ -13,7 +13,7 @@ class ItemController extends Controller
         // All routes in this controller require authentication
         $this->middleware('auth:sanctum');
     }
-    // 📦 Get all items with optional filters
+    //  Get all items with optional filters
     public function getAllItems(Request $request)
     {
         $query = Item::with(['category', 'supplier'])
@@ -34,17 +34,17 @@ class ItemController extends Controller
             });
         }
 
-        // 🎯 Filter by category
+        //  Filter by category
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);
         }
 
-        // ⚠️ Low stock filter
+        //  Low stock filter
         if ($request->has('low_stock') && $request->boolean('low_stock')) {
             $query->whereColumn('stock', '<=', 'min_stock');
         }
 
-        // 📄 Cursor Pagination (default 10 per page)
+        // Cursor Pagination (default 10 per page)
         $perPage = $request->input('per_page', 10);
         $items = $query->cursorPaginate($perPage);
 
@@ -55,7 +55,7 @@ class ItemController extends Controller
             ], 404);
         }
 
-        // 🖼️ Add margin + full image path
+        //  Add margin + full image path
         $items->getCollection()->transform(function ($item) {
             $item->margin = $item->price - $item->cost;
             $item->product_image = $item->product_image
@@ -64,7 +64,7 @@ class ItemController extends Controller
             return $item;
         });
 
-        // 📊 Summary counts
+        //  Summary counts
         $loadedItems = Item::where('is_active', 1)->count();
         $inStock = Item::where('is_active', 1)->where('stock', '>', 0)->count();
         $lowStock = Item::where('is_active', 1)
@@ -73,7 +73,7 @@ class ItemController extends Controller
             ->count();
         $outOfStock = Item::where('is_active', 1)->where('stock', '=', 0)->count();
 
-        // ✅ Final response
+        //  Final response
         return response()->json([
             'isSuccess'   => true,
             'items'       => $items->items(),
@@ -93,7 +93,7 @@ class ItemController extends Controller
 
 
 
-    // 📦 Get single item
+    // Get single item
     public function getItemById($id)
     {
         $item = Item::with(['category', 'supplier'])->find($id);
@@ -113,7 +113,7 @@ class ItemController extends Controller
         ]);
     }
 
-    // 🆕 Create item
+    // Create item
     public function createItem(Request $request)
     {
         try {
@@ -155,7 +155,7 @@ class ItemController extends Controller
         }
     }
 
-    // ✏️ Update item
+    // Update item
     public function updateItem(Request $request, $id)
     {
         $item = Item::find($id);
@@ -182,7 +182,7 @@ class ItemController extends Controller
                 'product_image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             ]);
 
-            // 📸 Handle new image upload with your helper
+            //  Handle new image upload with your helper
             $imagePath = $this->saveFileToPublic($request, 'product_image', 'item');
             if ($imagePath) {
                 // delete old image if exists
@@ -209,7 +209,7 @@ class ItemController extends Controller
     }
 
 
-    // 🗑️ Archive item (soft deactivate)
+    //  Archive item (soft deactivate)
     public function archiveItem($id)
     {
         $item = Item::find($id);

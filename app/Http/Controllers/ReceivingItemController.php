@@ -12,7 +12,7 @@ class ReceivingItemController extends Controller
         // All routes in this controller require authentication
         $this->middleware('auth:sanctum');
     }
-    // 📦 Get all receiving items for a given receiving
+    //  Get all receiving items for a given receiving
     public function getByReceiving($receivingId)
     {
         $items = ReceivingItem::with('item')->where('receiving_id', $receivingId)->get();
@@ -23,7 +23,7 @@ class ReceivingItemController extends Controller
         ]);
     }
 
-    // ✏️ Update a receiving item
+    //  Update a receiving item
     public function updateReceivingItem(Request $request, $id)
     {
         $item = ReceivingItem::find($id);
@@ -54,7 +54,7 @@ class ReceivingItemController extends Controller
         ]);
     }
 
-    // 🗑️ Delete receiving item
+    // Delete receiving item
     public function deleteReceivingItem($id)
     {
         $item = ReceivingItem::find($id);

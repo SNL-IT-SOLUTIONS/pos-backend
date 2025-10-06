@@ -10,11 +10,11 @@ class CategoryController extends Controller
 {
     public function __construct()
     {
-        // ✅ Protect all routes with Sanctum
+        //  Protect all routes with Sanctum
         $this->middleware('auth:sanctum');
     }
 
-    // ✅ Get all categories (exclude archived)
+    //  Get all categories (exclude archived)
     public function getCategories(Request $request)
     {
         try {
@@ -51,7 +51,7 @@ class CategoryController extends Controller
     }
 
 
-    // ✅ Get single category
+    // Get single category
     public function getCategoryById($id)
     {
         try {
@@ -79,7 +79,7 @@ class CategoryController extends Controller
         }
     }
 
-    // ✅ Create category
+    //  Create category
     public function createCategory(Request $request)
     {
         try {
@@ -108,7 +108,7 @@ class CategoryController extends Controller
         }
     }
 
-    // ✅ Update category
+    // Update category
     public function updateCategory(Request $request, $id)
     {
         try {
@@ -146,7 +146,7 @@ class CategoryController extends Controller
         }
     }
 
-    // ✅ Soft delete category (set is_archived = 1)
+    // Soft delete category (set is_archived = 1)
     public function archiveCategory($id)
     {
         try {

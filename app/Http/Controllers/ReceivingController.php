@@ -160,7 +160,7 @@ class ReceivingController extends Controller
     }
 
 
-    // ✅ Mark receiving as completed (update stock)
+    //  Mark receiving as completed (update stock)
     public function completeReceiving($id)
     {
         $receiving = Receiving::with('items.item')->find($id);

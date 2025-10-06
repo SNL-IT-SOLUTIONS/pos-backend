@@ -13,7 +13,7 @@ class CustomersController extends Controller
         $this->middleware('auth:sanctum');
     }
 
-    // ✅ Create new customer
+    //  Create new customer
     public function createCustomer(Request $request)
     {
         try {
@@ -60,7 +60,7 @@ class CustomersController extends Controller
     }
 
 
-    // ✅ Get all customers (exclude archived)
+    //  Get all customers (exclude archived)
     public function getCustomers(Request $request)
     {
         // Default per page = 10 if not specified
@@ -103,7 +103,7 @@ class CustomersController extends Controller
 
 
 
-    // ✅ Get single customer
+    //  Get single customer
     public function getCustomerById($id)
     {
         $customer = Customers::where('id', $id)->where('is_archived', 0)->first();
@@ -121,7 +121,7 @@ class CustomersController extends Controller
         ], 200);
     }
 
-    // ✅ Update customer
+    //  Update customer
     public function updateCustomer(Request $request, $id)
     {
         $customer = Customers::where('id', $id)->where('is_archived', 0)->first();
@@ -177,7 +177,7 @@ class CustomersController extends Controller
     }
 
 
-    // ✅ Soft delete customer (set is_archived = 1)
+    //  Soft delete customer (set is_archived = 1)
     public function archiveCustomer($id)
     {
         $customer = Customers::where('id', $id)->where('is_archived', 0)->first();
