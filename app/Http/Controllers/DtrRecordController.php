@@ -19,6 +19,7 @@ class DtrRecordController extends Controller
         $query = DtrRecord::with(['user.role'])
             ->orderBy('login_start_time', 'desc');
 
+        // 🔍 Search
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->whereHas('user', function ($q) use ($search) {
@@ -29,8 +30,10 @@ class DtrRecordController extends Controller
                 ->orWhere('remarks', 'LIKE', "%$search%");
         }
 
+        // 📄 Pagination
         $records = $query->paginate($request->get('per_page', 10));
 
+        // 🧠 Transform data for display
         $data = $records->getCollection()->transform(function ($record) {
             return [
                 'id'           => $record->id,
@@ -50,13 +53,35 @@ class DtrRecordController extends Controller
                     ? number_format($record->total_hours, 2) . 'h'
                     : null,
                 'remarks'      => $record->remarks,
-                'status'       => $record->user && $record->user->is_login ? 'Online' : 'Offline' // 👈 direct from users table
+                'status'       => $record->user && $record->user->is_login ? 'Online' : 'Offline',
             ];
         });
+
+        // 📊 Summary Section
+        $currentlyWorking = \App\Models\User::where('is_login', 1)->count(); // 👈 logged in users
+        $totalRecords = DtrRecord::count();
+
+        $startOfMonth = Carbon::now()->startOfMonth();
+        $endOfMonth = Carbon::now()->endOfMonth();
+
+        $totalHoursThisPeriod = DtrRecord::whereBetween('login_start_time', [$startOfMonth, $endOfMonth])
+            ->sum('total_hours');
+
+        // 🧮 Average Hours (based on total records, since active count removed)
+        $averageHoursPerEmployee = $totalRecords > 0
+            ? number_format($totalHoursThisPeriod / $totalRecords, 2)
+            : 0;
 
         return response()->json([
             'isSuccess'   => true,
             'records'     => $data,
+            'summary'     => [
+                'currently_working'        => $currentlyWorking,
+                'total_logged_in'          => $currentlyWorking,
+                'total_records'            => $totalRecords,
+                'total_hours_this_period'  => number_format($totalHoursThisPeriod, 2) . 'h',
+                'average_hours_per_day'    => $averageHoursPerEmployee . 'h',
+            ],
             'pagination'  => [
                 'current_page' => $records->currentPage(),
                 'per_page'     => $records->perPage(),
