@@ -18,6 +18,7 @@ class Sales extends Model
         'payment_type',
         'amount_paid',
         'change',
+        'status',
         'held_by'
     ];
 

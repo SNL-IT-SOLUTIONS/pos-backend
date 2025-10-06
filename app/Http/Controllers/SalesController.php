@@ -108,7 +108,7 @@ class SalesController extends Controller
             'items.*.qty'    => 'required|integer|min:1',
             'gift_card_id'   => 'nullable|integer|exists:gift_cards,id',
             'payment_type'   => 'nullable|string|in:cash,card,gcash',
-            'amount_paid'    => 'required|integer|min:0',
+            'amount_paid'    => 'required|numeric|min:0',
         ]);
 
         return DB::transaction(function () use ($validated) {

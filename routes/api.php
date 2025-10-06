@@ -19,7 +19,7 @@ use App\Http\Controllers\ReceivingController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\DtrRecordController;
-
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -144,7 +144,10 @@ Route::controller(SalesController::class)->middleware(['auth:sanctum'])->group(f
     Route::post('complete/held-sale/{id}', 'completeHeldSale');
 });
 
-
+//DASHBOARD
+Route::controller(AuthController::class)->group(function () {
+    Route::get('dashboard', 'getDashboard');
+});
 
 
 //BUSINESS INFORMATION
