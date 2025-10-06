@@ -16,6 +16,8 @@ class Sales extends Model
         'discount',
         'net_amount',
         'payment_type',
+        'amount_paid',
+        'change',
         'held_by'
     ];
 

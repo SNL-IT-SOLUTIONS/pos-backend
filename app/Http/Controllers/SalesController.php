@@ -107,23 +107,24 @@ class SalesController extends Controller
             'items.*.id'     => 'required|integer|exists:items,id',
             'items.*.qty'    => 'required|integer|min:1',
             'gift_card_id'   => 'nullable|integer|exists:gift_cards,id',
+            'payment_type'   => 'nullable|string|in:cash,card,gcash',
+            'amount_paid'    => 'required|numeric|min:0',
         ]);
 
         return DB::transaction(function () use ($validated) {
 
-            // Calculate total from item prices in DB
+            // 🧮 Calculate total
             $total = 0;
             foreach ($validated['items'] as $item) {
                 $product = Item::findOrFail($item['id']);
                 if ($item['qty'] > $product->stock) {
-                    throw new \Exception("Not enough stock for item {$product->name}");
+                    throw new \Exception("Not enough stock for item {$product->item_name}");
                 }
                 $total += $product->price * $item['qty'];
             }
 
+            // 🎁 Apply gift card if provided
             $discount = 0;
-
-            // Apply gift card if provided and active
             if (!empty($validated['gift_card_id'])) {
                 $giftCard = GiftCards::where('id', $validated['gift_card_id'])
                     ->where('is_active', 1)
@@ -140,21 +141,29 @@ class SalesController extends Controller
                 $giftCard->save();
             }
 
+            // 💰 Net amount and payment logic
             $net = $total - $discount;
-
-            // Default payment_type to 'cash'
             $paymentType = $validated['payment_type'] ?? 'cash';
+            $amountPaid = $validated['amount_paid'];
+            $change = $amountPaid - $net;
 
-            // Create sale record
+            if ($amountPaid < $net) {
+                throw new \Exception("Insufficient payment. Customer must pay at least ₱" . number_format($net, 2));
+            }
+
+            // 🧾 Create sale record
             $sale = Sales::create([
                 'customer_id'  => $validated['customer_id'] ?? null,
                 'total_amount' => $total,
                 'discount'     => $discount,
                 'net_amount'   => $net,
                 'payment_type' => $paymentType,
+                'amount_paid'  => $amountPaid,
+                'change'       => $change,
+                'status'       => 'completed',
             ]);
 
-            // Create sale items and decrease stock
+            // 💼 Create sale items and decrease stock
             foreach ($validated['items'] as $item) {
                 $product = Item::findOrFail($item['id']);
 
@@ -164,19 +173,41 @@ class SalesController extends Controller
                     'quantity' => $item['qty'],
                     'price'    => $product->price,
                     'total'    => $product->price * $item['qty'],
-                    'status'  => 'held',
-                    'held_by' => auth()->id(),
+                    'status'   => 'completed',
+                    'held_by'  => auth()->id(),
                 ]);
 
-                // Decrease stock
                 $product->stock -= $item['qty'];
                 $product->save();
             }
 
+            // 🧾 Build receipt data
+            $receipt = [
+                'sale_id'       => $sale->id,
+                'date'          => now()->format('M d, Y h:i A'),
+                'items'         => $sale->items->map(function ($i) {
+                    return [
+                        'item_name' => $i->item->item_name ?? 'N/A',
+                        'quantity'  => $i->quantity,
+                        'price'     => number_format($i->price, 2),
+                        'total'     => number_format($i->total, 2),
+                    ];
+                }),
+                'summary' => [
+                    'total_amount' => '₱' . number_format($total, 2),
+                    'discount'     => '₱' . number_format($discount, 2),
+                    'net_amount'   => '₱' . number_format($net, 2),
+                    'amount_paid'  => '₱' . number_format($amountPaid, 2),
+                    'change'       => '₱' . number_format($change, 2),
+                    'payment_type' => ucfirst($paymentType),
+                ],
+            ];
+
             return response()->json([
                 'isSuccess' => true,
-                'message'   => 'Sale created successfully.',
-                'sale'      => $sale->load('items'),
+                'message'   => 'Sale completed successfully.',
+                'sale'      => $sale->load('items.item'),
+                'receipt'   => $receipt,
             ], 201);
         });
     }
@@ -242,7 +273,9 @@ class SalesController extends Controller
         return DB::transaction(function () use ($sale, $request) {
             $discount = 0;
             $paymentType = $request->input('payment_type', 'cash');
+            $amountPaid = $request->input('amount_paid', 0);
 
+            // 🧮 Gift card logic
             if ($request->filled('gift_card_id')) {
                 $giftCard = GiftCards::where('id', $request->gift_card_id)
                     ->where('is_active', 1)
@@ -259,12 +292,16 @@ class SalesController extends Controller
                 $giftCard->save();
             }
 
+            // 💰 Compute totals
             $sale->discount = $discount;
             $sale->net_amount = $sale->total_amount - $discount;
             $sale->payment_type = $paymentType;
+            $sale->amount_paid = $amountPaid;
+            $sale->change = max($amountPaid - $sale->net_amount, 0); // prevent negative change
             $sale->status = 'completed';
             $sale->save();
 
+            // 📦 Deduct stock for each item
             foreach ($sale->items as $saleItem) {
                 $product = Item::findOrFail($saleItem->item_id);
                 if ($saleItem->quantity > $product->stock) {
@@ -274,10 +311,30 @@ class SalesController extends Controller
                 $product->save();
             }
 
+            // 🧾 Receipt summary
+            $receipt = [
+                'sale_id'      => $sale->id,
+                'customer_id'  => $sale->customer_id,
+                'total_amount' => $sale->total_amount,
+                'discount'     => $sale->discount,
+                'net_amount'   => $sale->net_amount,
+                'amount_paid'  => $sale->amount_paid,
+                'change'       => $sale->change,
+                'payment_type' => $sale->payment_type,
+                'items'        => $sale->items->map(function ($item) {
+                    return [
+                        'item_name' => $item->item->item_name,
+                        'quantity'  => $item->quantity,
+                        'price'     => $item->price,
+                        'total'     => $item->total,
+                    ];
+                }),
+            ];
+
             return response()->json([
                 'isSuccess' => true,
                 'message'   => 'Held sale completed successfully.',
-                'sale'      => $sale->load('items'),
+                'receipt'   => $receipt,
             ]);
         });
     }
