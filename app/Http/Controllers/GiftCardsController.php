@@ -29,7 +29,8 @@ class GiftCardsController extends Controller
 
         // Generate gift card number format: GC{card_id}-{year}
         $year = date('Y');
-        $validated['gift_card_number'] = sprintf("GC%03d-%s", $validated['card_id'], $year);
+        $uniqueNumber = strtoupper(uniqid()); // or random_int if you prefer numeric
+        $validated['gift_card_number'] = sprintf("GC%03d-%s-%s", $validated['card_id'], $year, substr($uniqueNumber, -4));
 
         $giftCard = GiftCards::create($validated);
 
