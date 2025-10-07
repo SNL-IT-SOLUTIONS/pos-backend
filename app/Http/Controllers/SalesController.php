@@ -77,16 +77,41 @@ class SalesController extends Controller
 
     public function getHeldSales(Request $request)
     {
-        $perPage = $request->input('per_page', 10); // default 10
+        $perPage = $request->input('per_page', 10); // default 10 per page
 
-        $sales = Sales::with('items.item')
+        $sales = Sales::with([
+            'items.item',
+            'customer:id,first_name,last_name' // eager load both name parts
+        ])
             ->where('status', 'held')
             ->orderBy('created_at', 'asc')
             ->cursorPaginate($perPage);
 
+        $formattedSales = $sales->map(function ($sale) {
+            $customerName = $sale->customer
+                ? trim($sale->customer->first_name . ' ' . $sale->customer->last_name)
+                : 'Walk-in Customer';
+
+            return [
+                'id' => $sale->id,
+                'customer_id' => $sale->customer_id,
+                'customer_name' => $customerName,
+                'total_amount' => $sale->total_amount,
+                'discount' => $sale->discount,
+                'net_amount' => $sale->net_amount,
+                'payment_type' => $sale->payment_type,
+                'amount_paid' => $sale->amount_paid,
+                'change' => $sale->change,
+                'status' => $sale->status,
+                'held_by' => $sale->held_by,
+                'items' => $sale->items,
+                'created_at' => $sale->created_at,
+            ];
+        });
+
         return response()->json([
             'isSuccess'  => true,
-            'held_sales' => $sales->items(),
+            'held_sales' => $formattedSales,
             'pagination' => [
                 'per_page'    => $sales->perPage(),
                 'next_cursor' => $sales->nextCursor()?->encode(),
@@ -94,6 +119,9 @@ class SalesController extends Controller
             ],
         ]);
     }
+
+
+
 
 
 
