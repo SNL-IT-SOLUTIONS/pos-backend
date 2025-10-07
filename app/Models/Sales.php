@@ -33,4 +33,9 @@ class Sales extends Model
     {
         return $this->belongsTo(Customers::class);
     }
+
+    public function giftCard()
+    {
+        return $this->belongsTo(GiftCards::class, 'gift_card_id');
+    }
 }

@@ -81,7 +81,8 @@ class SalesController extends Controller
 
         $sales = Sales::with([
             'items.item',
-            'customer:id,first_name,last_name' // eager load both name parts
+            'customer:id,first_name,last_name',
+            'giftCard:id,gift_card_number,gift_card_name,description,value,balance,expiration_date,is_active,customer_id',
         ])
             ->where('status', 'held')
             ->orderBy('created_at', 'asc')
@@ -92,20 +93,56 @@ class SalesController extends Controller
                 ? trim($sale->customer->first_name . ' ' . $sale->customer->last_name)
                 : 'Walk-in Customer';
 
+            // 🧩 If the customer exists, pull all their available gift cards
+            $customerGiftCards = $sale->customer
+                ? GiftCards::where('customer_id', $sale->customer->id)
+                ->where('is_archived', 0)
+                ->get([
+                    'gift_card_number',
+                    'gift_card_name',
+                    'description',
+                    'value',
+                    'balance',
+                    'expiration_date',
+                    'is_active'
+                ])
+                ->map(function ($card) {
+                    return [
+                        'gift_card_number' => $card->gift_card_number,
+                        'gift_card_name'   => $card->gift_card_name,
+                        'description'      => $card->description,
+                        'value'            => $card->value,
+                        'balance'          => $card->balance,
+                        'expiration_date'  => $card->expiration_date,
+                        'is_active'        => (bool) $card->is_active,
+                    ];
+                })
+                : collect(); // No gift cards for walk-ins
+
             return [
-                'id' => $sale->id,
-                'customer_id' => $sale->customer_id,
-                'customer_name' => $customerName,
-                'total_amount' => $sale->total_amount,
-                'discount' => $sale->discount,
-                'net_amount' => $sale->net_amount,
-                'payment_type' => $sale->payment_type,
-                'amount_paid' => $sale->amount_paid,
-                'change' => $sale->change,
-                'status' => $sale->status,
-                'held_by' => $sale->held_by,
-                'items' => $sale->items,
-                'created_at' => $sale->created_at,
+                'id'             => $sale->id,
+                'customer_id'    => $sale->customer_id,
+                'customer_name'  => $customerName,
+                'gift_card_used' => $sale->giftCard ? [
+                    'gift_card_number' => $sale->giftCard->gift_card_number,
+                    'gift_card_name'   => $sale->giftCard->gift_card_name,
+                    'description'      => $sale->giftCard->description,
+                    'value'            => $sale->giftCard->value,
+                    'balance'          => $sale->giftCard->balance,
+                    'expiration_date'  => $sale->giftCard->expiration_date,
+                    'is_active'        => (bool) $sale->giftCard->is_active,
+                ] : null,
+                'available_gift_cards' => $customerGiftCards, // 🪄 all gift cards owned by this customer
+                'total_amount'   => $sale->total_amount,
+                'discount'       => $sale->discount,
+                'net_amount'     => $sale->net_amount,
+                'payment_type'   => $sale->payment_type,
+                'amount_paid'    => $sale->amount_paid,
+                'change'         => $sale->change,
+                'status'         => $sale->status,
+                'held_by'        => $sale->held_by,
+                'items'          => $sale->items,
+                'created_at'     => $sale->created_at,
             ];
         });
 
@@ -119,6 +156,8 @@ class SalesController extends Controller
             ],
         ]);
     }
+
+
 
 
 
