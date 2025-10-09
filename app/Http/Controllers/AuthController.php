@@ -71,7 +71,7 @@ class AuthController extends Controller
                 'username'   => $user->username,
                 'role_id'    => $user->role_id,
                 'role_name'  => $user->role ? $user->role->role_name : null,
-                'is_login'   => $user->is_login, // 👈 return login status
+                'is_login'   => $user->is_login, //return login status
             ],
             'token'     => $token,
             'business'  => $businessInfo,

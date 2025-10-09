@@ -14,5 +14,6 @@ class Roles extends Model
         'role_name',
         'description',
         'is_active',
+        'is_archived',
     ];
 }

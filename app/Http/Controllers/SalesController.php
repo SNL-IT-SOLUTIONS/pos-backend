@@ -178,9 +178,12 @@ class SalesController extends Controller
             'amount_paid'    => 'required|numeric|min:0',
         ]);
 
-        return DB::transaction(function () use ($validated) {
+        // Get authenticated user ID before transaction
+        $heldBy = $request->user()->id;
 
-            //  Calculate total
+        return DB::transaction(function () use ($validated, $heldBy) {
+
+            // 1️⃣ Calculate total
             $total = 0;
             foreach ($validated['items'] as $item) {
                 $product = Item::findOrFail($item['id']);
@@ -190,7 +193,7 @@ class SalesController extends Controller
                 $total += $product->price * $item['qty'];
             }
 
-            // Apply gift card if provided
+            // 2️⃣ Apply gift card if provided
             $discount = 0;
             if (!empty($validated['gift_card_id'])) {
                 $giftCard = GiftCards::where('id', $validated['gift_card_id'])
@@ -208,7 +211,7 @@ class SalesController extends Controller
                 $giftCard->save();
             }
 
-            // Net amount and payment logic
+            // 3️⃣ Net amount and payment logic
             $net = $total - $discount;
             $paymentType = $validated['payment_type'] ?? 'cash';
             $amountPaid = $validated['amount_paid'];
@@ -218,7 +221,7 @@ class SalesController extends Controller
                 throw new \Exception("Insufficient payment. Customer must pay at least ₱" . number_format($net, 2));
             }
 
-            //  Create sale record
+            // 4️⃣ Create sale record
             $sale = Sales::create([
                 'customer_id'  => $validated['customer_id'] ?? null,
                 'total_amount' => $total,
@@ -230,7 +233,7 @@ class SalesController extends Controller
                 'status'       => 'completed',
             ]);
 
-            //  Create sale items and decrease stock
+            // 5️⃣ Create sale items and decrease stock
             foreach ($validated['items'] as $item) {
                 $product = Item::findOrFail($item['id']);
 
@@ -241,18 +244,18 @@ class SalesController extends Controller
                     'price'    => $product->price,
                     'total'    => $product->price * $item['qty'],
                     'status'   => 'completed',
-                    'held_by'  => auth()->id(),
+                    'held_by'  => $heldBy,
                 ]);
 
                 $product->stock -= $item['qty'];
                 $product->save();
             }
 
-            // Build receipt data
+            // 6️⃣ Build receipt data
             $receipt = [
-                'sale_id'       => $sale->id,
-                'date'          => now()->format('M d, Y h:i A'),
-                'items'         => $sale->items->map(function ($i) {
+                'sale_id' => $sale->id,
+                'date'    => now()->format('M d, Y h:i A'),
+                'items'   => $sale->items->map(function ($i) {
                     return [
                         'item_name' => $i->item->item_name ?? 'N/A',
                         'quantity'  => $i->quantity,
@@ -261,12 +264,12 @@ class SalesController extends Controller
                     ];
                 }),
                 'summary' => [
-                    'total_amount' => '₱' . number_format($total, 2),
-                    'discount'     => '₱' . number_format($discount, 2),
-                    'net_amount'   => '₱' . number_format($net, 2),
-                    'amount_paid'  => '₱' . number_format($amountPaid, 2),
-                    'change'       => '₱' . number_format($change, 2),
-                    'payment_type' => ucfirst($paymentType),
+                    'total_amount' => '₱' . number_format($sale->total_amount, 2),
+                    'discount'     => '₱' . number_format($sale->discount, 2),
+                    'net_amount'   => '₱' . number_format($sale->net_amount, 2),
+                    'amount_paid'  => '₱' . number_format($sale->amount_paid, 2),
+                    'change'       => '₱' . number_format($sale->change, 2),
+                    'payment_type' => ucfirst($sale->payment_type),
                 ],
             ];
 
@@ -278,6 +281,7 @@ class SalesController extends Controller
             ], 201);
         });
     }
+
 
 
 
