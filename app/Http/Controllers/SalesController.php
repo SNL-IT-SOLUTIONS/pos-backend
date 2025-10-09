@@ -179,7 +179,7 @@ class SalesController extends Controller
         ]);
 
         // Get authenticated user ID before transaction
-        $heldBy = $request->user()->id;
+        $heldBy = auth()->id();
 
         return DB::transaction(function () use ($validated, $heldBy) {
 
