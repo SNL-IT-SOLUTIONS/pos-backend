@@ -160,26 +160,20 @@ class SalesController extends Controller
 
 
 
-
-
-
-
-
-
     public function createSale(Request $request)
     {
         $validated = $request->validate([
-            'customer_id'    => 'nullable|integer|exists:customers,id',
-            'items'          => 'required|array|min:1',
-            'items.*.id'     => 'required|integer|exists:items,id',
-            'items.*.qty'    => 'required|integer|min:1',
-            'gift_card_id'   => 'nullable|integer|exists:gift_cards,id',
-            'payment_type'   => 'nullable|string|in:cash,card,gcash',
-            'amount_paid'    => 'required|numeric|min:0',
+            'customer_id'  => 'nullable|integer|exists:customers,id',
+            'items'        => 'required|array|min:1',
+            'items.*.id'   => 'required|integer|exists:items,id',
+            'items.*.qty'  => 'required|integer|min:1',
+            'gift_card_id' => 'nullable|integer|exists:gift_cards,id',
+            'payment_type' => 'nullable|string|in:cash,card,gcash',
+            'amount_paid'  => 'required|numeric|min:0',
         ]);
 
-        // Get authenticated user ID before transaction
-        $heldBy = auth()->id();
+        // Get authenticated user ID
+        $heldBy = $request->user()->id;
 
         return DB::transaction(function () use ($validated, $heldBy) {
 
@@ -193,7 +187,7 @@ class SalesController extends Controller
                 $total += $product->price * $item['qty'];
             }
 
-            // 2️⃣ Apply gift card if provided
+            // 2️⃣ Apply gift card
             $discount = 0;
             if (!empty($validated['gift_card_id'])) {
                 $giftCard = GiftCards::where('id', $validated['gift_card_id'])
@@ -202,16 +196,15 @@ class SalesController extends Controller
 
                 $discount = min($giftCard->balance, $total);
 
-                if ($giftCard->balance <= $total) {
-                    $giftCard->is_active = 0;
+                $giftCard->balance -= $discount;
+                if ($giftCard->balance <= 0) {
                     $giftCard->balance = 0;
-                } else {
-                    $giftCard->balance -= $discount;
+                    $giftCard->is_active = 0;
                 }
                 $giftCard->save();
             }
 
-            // 3️⃣ Net amount and payment logic
+            // 3️⃣ Net amount and payment validation
             $net = $total - $discount;
             $paymentType = $validated['payment_type'] ?? 'cash';
             $amountPaid = $validated['amount_paid'];
@@ -231,13 +224,15 @@ class SalesController extends Controller
                 'amount_paid'  => $amountPaid,
                 'change'       => $change,
                 'status'       => 'completed',
+                'held_by'      => $heldBy, // ✅ Save who processed the sale
             ]);
 
-            // 5️⃣ Create sale items and decrease stock
+            // 5️⃣ Create sale items & decrease stock
+            $saleItems = [];
             foreach ($validated['items'] as $item) {
                 $product = Item::findOrFail($item['id']);
 
-                SaleItem::create([
+                $saleItem = SaleItem::create([
                     'sale_id'  => $sale->id,
                     'item_id'  => $product->id,
                     'quantity' => $item['qty'],
@@ -249,9 +244,14 @@ class SalesController extends Controller
 
                 $product->stock -= $item['qty'];
                 $product->save();
+
+                $saleItems[] = $saleItem;
             }
 
-            // 6️⃣ Build receipt data
+            // 6️⃣ Reload sale with items including held_by
+            $sale->load(['items.item']);
+
+            // 7️⃣ Build receipt
             $receipt = [
                 'sale_id' => $sale->id,
                 'date'    => now()->format('M d, Y h:i A'),
@@ -261,6 +261,7 @@ class SalesController extends Controller
                         'quantity'  => $i->quantity,
                         'price'     => number_format($i->price, 2),
                         'total'     => number_format($i->total, 2),
+                        'held_by'   => $i->held_by, // ✅ Now included
                     ];
                 }),
                 'summary' => [
@@ -276,11 +277,12 @@ class SalesController extends Controller
             return response()->json([
                 'isSuccess' => true,
                 'message'   => 'Sale completed successfully.',
-                'sale'      => $sale->load('items.item'),
+                'sale'      => $sale,
                 'receipt'   => $receipt,
             ], 201);
         });
     }
+
 
 
 
